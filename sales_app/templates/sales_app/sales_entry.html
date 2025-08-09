@@ -606,32 +606,65 @@ $(document).ready(function() {
         let isValid = true;
         const errors = [];
         
-        document.querySelectorAll('#items-table-body tr').forEach(function(row) {
-            if (row.id === 'template-row') return;
+        try {
+            const rows = document.querySelectorAll('#items-table-body tr');
+            console.log(`Validating ${rows.length} rows`);
             
-            const quantityInput = row.querySelector('.quantity');
-            const itemSelect = row.querySelector('select[name*="item"]');
-            
-            if (!quantityInput || !itemSelect) return;
-            
-            const quantity = parseInt(quantityInput.value) || 0;
-            const selectedOption = $(itemSelect).select2('data')[0];
-            
-            if (selectedOption && selectedOption.stock !== undefined && quantity > 0) {
-                const availableStock = parseInt(selectedOption.stock) || 0;
-                const itemName = selectedOption.text.split(' (Stock:')[0]; // Extract name without stock info
+            rows.forEach(function(row) {
+                if (row.id === 'template-row') return;
                 
-                if (quantity > availableStock) {
-                    isValid = false;
-                    errors.push(`${itemName}: Requested ${quantity}, Available ${availableStock}`);
+                const quantityInput = row.querySelector('.quantity');
+                const itemSelect = row.querySelector('select[name*="item"]');
+                
+                if (!quantityInput || !itemSelect) {
+                    console.warn('Missing quantity or item input in row');
+                    return;
                 }
-            }
-        });
-        
-        if (!isValid) {
-            alert('Insufficient stock for the following items:\n\n' + errors.join('\n'));
+                
+                const quantity = parseInt(quantityInput.value) || 0;
+                if (quantity <= 0) return; // Skip empty rows
+                
+                // Get Select2 data safely
+                let selectedOption = null;
+                try {
+                    const select2Data = $(itemSelect).select2('data');
+                    selectedOption = select2Data && select2Data[0];
+                } catch (select2Error) {
+                    console.warn('Select2 error:', select2Error);
+                    // Fallback to standard select option
+                    const selectedIndex = itemSelect.selectedIndex;
+                    if (selectedIndex >= 0) {
+                        selectedOption = {
+                            text: itemSelect.options[selectedIndex].text,
+                            stock: parseInt(itemSelect.options[selectedIndex].dataset.stock) || 0
+                        };
+                    }
+                }
+                
+                if (selectedOption && selectedOption.stock !== undefined && quantity > 0) {
+                    const availableStock = parseInt(selectedOption.stock) || 0;
+                    const itemName = selectedOption.text ? selectedOption.text.split(' (Stock:')[0] : 'Unknown Item';
+                    
+                    if (quantity > availableStock) {
+                        isValid = false;
+                        errors.push(`${itemName}: Requested ${quantity}, Available ${availableStock}`);
+                    }
+                }
+            });
+            
+        } catch (error) {
+            console.error('Stock validation error:', error);
+            isValid = false;
+            errors.push('Error validating stock levels. Please check your items and try again.');
         }
         
+        if (!isValid) {
+            const errorMessage = 'Insufficient stock for the following items:\n\n' + errors.join('\n') + 
+                               '\n\nPlease adjust quantities or remove items before saving.';
+            alert(errorMessage);
+        }
+        
+        console.log(`Stock validation ${isValid ? 'passed' : 'failed'}`);
         return isValid;
     }
 
@@ -698,32 +731,92 @@ $(document).ready(function() {
         }
     });
     
-    // Form submission with validation
+    // Form submission with validation and error handling
     document.getElementById('sales-form').addEventListener('submit', function(e) {
-        // Validate quantities before allowing submission
-        if (!validateAllQuantities()) {
+        console.log('Form submission started...');
+        
+        try {
+            // Validate quantities before allowing submission
+            if (!validateAllQuantities()) {
+                console.error('Stock validation failed');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Robust formset management
+            const tableBody = document.getElementById('items-table-body');
+            if (!tableBody) {
+                console.error('Table body not found');
+                alert('Form error: Unable to find items table. Please refresh and try again.');
+                e.preventDefault();
+                return false;
+            }
+            
+            const rows = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.id !== 'template-row');
+            console.log(`Found ${rows.length} rows to submit`);
+            
+            // Multiple approaches to find TOTAL_FORMS field
+            let totalForms = document.getElementById('id_form-TOTAL_FORMS') ||
+                           document.querySelector('input[name$="form-TOTAL_FORMS"]') ||
+                           document.querySelector('input[name*="TOTAL_FORMS"]') ||
+                           document.querySelector('input[name$="-TOTAL_FORMS"]');
+            
+            if (!totalForms) {
+                console.error('TOTAL_FORMS field not found');
+                alert('Form error: Unable to submit. Please refresh the page and try again.');
+                e.preventDefault();
+                return false;
+            }
+            
+            totalForms.value = rows.length.toString();
+            console.log(`Set TOTAL_FORMS to ${totalForms.value}`);
+            
+            // Validate that we have at least one item
+            const hasValidItems = rows.some(row => {
+                const itemSelect = row.querySelector('select[name*="item"]');
+                const quantityInput = row.querySelector('.quantity');
+                return itemSelect && itemSelect.value && quantityInput && parseFloat(quantityInput.value) > 0;
+            });
+            
+            if (!hasValidItems) {
+                console.error('No valid items found');
+                alert('Please add at least one item with valid quantity before saving.');
+                e.preventDefault();
+                return false;
+            }
+            
+            // Clear localStorage on successful validation
+            try {
+                localStorage.removeItem(STORAGE_KEY);
+                console.log('localStorage cleared');
+            } catch (storageError) {
+                console.warn('Failed to clear localStorage:', storageError);
+                // Don't prevent form submission for localStorage errors
+            }
+            
+            // Add loading state to prevent double submissions
+            const submitButton = e.submitter || document.querySelector('button[type="submit"]');
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.textContent = submitButton.name === 'save_print' ? 'Saving & Printing...' : 'Saving...';
+                
+                // Re-enable after timeout as fallback
+                setTimeout(() => {
+                    submitButton.disabled = false;
+                    submitButton.textContent = submitButton.name === 'save_print' ? 'Save and Print' : 'Save';
+                }, 5000);
+            }
+            
+            console.log('Form validation passed, submitting...');
+            
+        } catch (error) {
+            console.error('Form submission error:', error);
+            alert('An error occurred while preparing the form. Please try again.');
             e.preventDefault();
             return false;
         }
         
-        const tableBody = document.getElementById('items-table-body');
-        const rows = Array.from(tableBody.querySelectorAll('tr')).filter(row => row.id !== 'template-row');
-        let totalForms = document.getElementById('id_form-TOTAL_FORMS');
-        if (!totalForms) {
-            totalForms = document.querySelector('input[name*="TOTAL_FORMS"]');
-        }
-        if (!totalForms) {
-            totalForms = document.querySelector('input[name$="-TOTAL_FORMS"]');
-        }
-        if (totalForms) {
-            totalForms.value = rows.length.toString();
-        }
-        
-        // Clear localStorage on successful submission
-        localStorage.removeItem(STORAGE_KEY);
-        
-        // Allow the form to submit normally - don't reload the page
-        // The Django view will handle the response (redirect or print page)
+        // Allow the form to submit normally - Django will handle the response
     });
 });
 </script>

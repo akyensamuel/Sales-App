@@ -77,9 +77,13 @@ def sale_post_save(sender, instance, created, **kwargs):
     # Invalidate sales-related caches
     SalesCache.invalidate_sales_cache()
     
-    # Invalidate daily cache for the related invoice
-    if instance.invoice and instance.invoice.date_of_sale:
-        SalesCache.invalidate_daily_cache(instance.invoice.date_of_sale)
+    # Invalidate daily cache for the related invoice (with error handling)
+    try:
+        if instance.invoice and instance.invoice.date_of_sale:
+            SalesCache.invalidate_daily_cache(instance.invoice.date_of_sale)
+    except (Invoice.DoesNotExist, AttributeError):
+        # Invoice may not exist or may be in process of deletion
+        pass
 
 
 @receiver(post_delete, sender=Sale)
@@ -88,6 +92,10 @@ def sale_post_delete(sender, instance, **kwargs):
     # Invalidate sales-related caches
     SalesCache.invalidate_sales_cache()
     
-    # Invalidate daily cache for the related invoice
-    if instance.invoice and instance.invoice.date_of_sale:
-        SalesCache.invalidate_daily_cache(instance.invoice.date_of_sale)
+    # Invalidate daily cache for the related invoice (with error handling)
+    try:
+        if instance.invoice and instance.invoice.date_of_sale:
+            SalesCache.invalidate_daily_cache(instance.invoice.date_of_sale)
+    except (Invoice.DoesNotExist, AttributeError):
+        # Invoice may have been deleted already (cascade delete)
+        pass

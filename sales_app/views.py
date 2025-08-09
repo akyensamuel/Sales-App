@@ -29,33 +29,52 @@ def is_manager(user):
 
 def validate_stock_availability(formset_data):
     """
-    Validate that all items in the formset have sufficient stock.
+    Validate that all items exist in the product catalog.
+    Note: Stock levels are now handled during deduction with minimum zero enforcement.
     Returns a list of error messages if validation fails.
     """
     errors = []
     stock_requirements = {}  # {product_name: total_quantity_needed}
     
-    for form_data in formset_data:
-        if form_data and not form_data.get('DELETE', False):
-            item_name = form_data.get('item')
-            quantity = form_data.get('quantity', 0)
-            
-            if item_name and quantity > 0:
-                stock_requirements[item_name] = stock_requirements.get(item_name, 0) + quantity
+    try:
+        print(f"DEBUG: Validating items for {len(formset_data)} entries")
+        
+        for i, form_data in enumerate(formset_data):
+            if form_data and not form_data.get('DELETE', False):
+                item_name = form_data.get('item')
+                quantity = form_data.get('quantity', 0)
+                
+                print(f"DEBUG: Item {i}: {item_name}, Quantity: {quantity}")
+                
+                if item_name and quantity > 0:
+                    stock_requirements[item_name] = stock_requirements.get(item_name, 0) + quantity
+        
+        print(f"DEBUG: Stock requirements: {stock_requirements}")
+        
+        # Only check that products exist - no longer blocking on stock levels
+        for item_name, total_needed in stock_requirements.items():
+            try:
+                product = Product.objects.get(name=item_name)
+                available = product.stock or 0
+                print(f"DEBUG: Product {item_name}: needed {total_needed}, available {available}")
+                
+                # Log low stock warning but don't block the sale
+                if available < total_needed:
+                    print(f"STOCK WARNING: Low stock for '{item_name}'. Needed: {total_needed}, Available: {available} (Sale will proceed, stock will be capped at zero)")
+                    
+            except Product.DoesNotExist:
+                error_msg = f"Product '{item_name}' not found in inventory."
+                errors.append(error_msg)
+                print(f"PRODUCT ERROR: {error_msg}")
+                
+    except Exception as validation_error:
+        error_msg = f"Stock validation error: {str(validation_error)}"
+        errors.append(error_msg)
+        print(f"VALIDATION ERROR: {error_msg}")
+        import traceback
+        traceback.print_exc()
     
-    # Check stock availability for each product
-    for item_name, total_needed in stock_requirements.items():
-        try:
-            product = Product.objects.get(name=item_name)
-            available = product.stock or 0
-            if available < total_needed:
-                errors.append(
-                    f"Insufficient stock for '{item_name}'. "
-                    f"Needed: {total_needed}, Available: {available}"
-                )
-        except Product.DoesNotExist:
-            errors.append(f"Product '{item_name}' not found in inventory.")
-    
+    print(f"DEBUG: Item validation completed. Found {len(errors)} errors")
     return errors
 
 
@@ -75,13 +94,42 @@ def deduct_stock_for_sale_items(formset_data, invoice_no):
             if item_name and quantity > 0:
                 stock_deductions[item_name] = stock_deductions.get(item_name, 0) + quantity
     
-    # Apply deductions
+def deduct_stock_for_sale_items(formset_data, invoice_no):
+    """
+    Deduct stock quantities for all items in the sale.
+    Stock levels are capped at zero (never goes negative).
+    This function should be called within a database transaction.
+    """
+    stock_deductions = {}  # {product_name: total_quantity_to_deduct}
+    
+    # Calculate total deductions needed per product
+    for form_data in formset_data:
+        if form_data and not form_data.get('DELETE', False):
+            item_name = form_data.get('item')
+            quantity = form_data.get('quantity', 0)
+            
+            if item_name and quantity > 0:
+                stock_deductions[item_name] = stock_deductions.get(item_name, 0) + quantity
+    
+    # Apply deductions with zero-floor enforcement
     for item_name, total_deduction in stock_deductions.items():
         try:
             product = Product.objects.select_for_update().get(name=item_name)
-            product.stock = (product.stock or 0) - total_deduction
+            current_stock = product.stock or 0
+            
+            # Calculate actual deduction (never let stock go negative)
+            actual_deduction = min(total_deduction, current_stock)
+            new_stock = max(0, current_stock - total_deduction)
+            
+            product.stock = new_stock
             product.save()
-            print(f"Stock deducted: {item_name} - {total_deduction} units. New stock: {product.stock}")
+            
+            if actual_deduction < total_deduction:
+                shortage = total_deduction - actual_deduction
+                print(f"STOCK CAPPED: {item_name} - attempted {total_deduction}, deducted {actual_deduction}, shortage {shortage}. New stock: {new_stock}")
+            else:
+                print(f"Stock deducted: {item_name} - {total_deduction} units. New stock: {new_stock}")
+                
         except Product.DoesNotExist:
             print(f"WARNING: Product '{item_name}' not found during stock deduction")
 
@@ -317,47 +365,101 @@ def sales_entry(request):
     SaleFormSet = inlineformset_factory(Invoice, Sale, form=SaleForm, extra=1, can_delete=True)
     
     if request.method == 'POST':
-        invoice_form = InvoiceForm(request.POST)
-        formset = SaleFormSet(request.POST)
-        
-        if invoice_form.is_valid() and formset.is_valid():
-            # Validate stock availability before proceeding
-            formset_data = [form.cleaned_data for form in formset if form.cleaned_data]
-            stock_errors = validate_stock_availability(formset_data)
+        try:
+            invoice_form = InvoiceForm(request.POST)
+            formset = SaleFormSet(request.POST)
             
-            if stock_errors:
-                for error in stock_errors:
-                    messages.error(request, error)
+            # Debug logging for production
+            print(f"DEBUG: Processing sales entry for user {request.user}")
+            print(f"DEBUG: Formset total forms: {request.POST.get('form-TOTAL_FORMS', 'NOT_FOUND')}")
+            print(f"DEBUG: POST data keys: {list(request.POST.keys())}")
+            
+            if invoice_form.is_valid() and formset.is_valid():
+                # Validate stock availability before proceeding
+                formset_data = [form.cleaned_data for form in formset if form.cleaned_data and not form.cleaned_data.get('DELETE', False)]
+                print(f"DEBUG: Processing {len(formset_data)} sale items")
+                
+                # Double-check we have items to process
+                if not formset_data:
+                    messages.error(request, 'No valid items found. Please add at least one item to the invoice.')
+                    print("DEBUG: No valid items found in formset")
+                else:
+                    validation_errors = validate_stock_availability(formset_data)
+                    
+                    if validation_errors:
+                        for error in validation_errors:
+                            messages.error(request, error)
+                        print(f"DEBUG: Item validation failed: {validation_errors}")
+                    else:
+                        try:
+                            with transaction.atomic():
+                                invoice = invoice_form.save(commit=False)
+                                invoice.user = request.user
+                                invoice.save()
+                                print(f"DEBUG: Invoice created with ID {invoice.id}")
+                                
+                                # Deduct stock (capped at zero) before saving formset
+                                deduct_stock_for_sale_items(formset_data, invoice.invoice_no)
+                                
+                                # Save the formset
+                                formset.instance = invoice
+                                saved_items = formset.save()
+                                print(f"DEBUG: Saved {len(saved_items)} sale items")
+                                
+                                # Recalculate total from saved items
+                                total_amount = sum(item.total_price for item in invoice.items.all())
+                                invoice.total = total_amount
+                                invoice.save()
+                                print(f"DEBUG: Invoice total calculated: {total_amount}")
+                                
+                                messages.success(request, f'Invoice {invoice.invoice_no} saved successfully!')
+                                
+                                if 'save_print' in request.POST:
+                                    print(f"DEBUG: Rendering receipt for invoice {invoice.invoice_no}")
+                                    return render(request, 'sales_app/receipt_print.html', {
+                                        'invoice': invoice,
+                                        'items': invoice.items.all(),
+                                    })
+                                
+                                print(f"DEBUG: Redirecting to sales entry after successful save")
+                                return redirect('sales_entry')
+                                
+                        except Exception as save_error:
+                            print(f"ERROR: Database transaction failed: {str(save_error)}")
+                            messages.error(request, f'Error saving invoice: {str(save_error)}')
+                            # Optionally add more detailed error for debugging
+                            if hasattr(save_error, '__dict__'):
+                                print(f"ERROR details: {save_error.__dict__}")
+                            
             else:
-                try:
-                    with transaction.atomic():
-                        invoice = invoice_form.save(commit=False)
-                        invoice.user = request.user
-                        invoice.save()
+                # Form validation failed
+                print("DEBUG: Form validation failed")
+                if not invoice_form.is_valid():
+                    print(f"DEBUG: Invoice form errors: {invoice_form.errors}")
+                    for field, errors in invoice_form.errors.items():
+                        for error in errors:
+                            messages.error(request, f"Invoice {field}: {error}")
+                            
+                if not formset.is_valid():
+                    print(f"DEBUG: Formset errors: {formset.errors}")
+                    print(f"DEBUG: Formset non-form errors: {formset.non_form_errors()}")
+                    
+                    for i, form in enumerate(formset.forms):
+                        if form.errors:
+                            print(f"DEBUG: Form {i} errors: {form.errors}")
+                            for field, errors in form.errors.items():
+                                for error in errors:
+                                    messages.error(request, f"Item {i+1} - {field}: {error}")
+                    
+                    for error in formset.non_form_errors():
+                        messages.error(request, f"Form error: {error}")
                         
-                        # Deduct stock before saving formset
-                        deduct_stock_for_sale_items(formset_data, invoice.invoice_no)
-                        
-                        # Save the formset
-                        formset.instance = invoice
-                        formset.save()
-                        
-                        # Recalculate total from saved items
-                        invoice.total = sum(item.total_price for item in invoice.items.all())
-                        invoice.save()
-                        
-                        messages.success(request, f'Invoice {invoice.invoice_no} saved successfully!')
-                        
-                        if 'save_print' in request.POST:
-                            return render(request, 'sales_app/receipt_print.html', {
-                                'invoice': invoice,
-                                'items': invoice.items.all(),
-                            })
-                        
-                        return redirect('sales_entry')
-                        
-                except Exception as e:
-                    messages.error(request, f'Error saving invoice: {str(e)}')
+        except Exception as general_error:
+            print(f"CRITICAL ERROR in sales_entry: {str(general_error)}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f'Unexpected error occurred. Please try again. Error: {str(general_error)}')
+            
     else:
         invoice_form = InvoiceForm()
         formset = SaleFormSet()
@@ -475,26 +577,68 @@ def manager_dashboard(request):
         elif 'delete_invoice_id' in request.POST:
             # Handle invoice deletion with stock restoration
             invoice_id = request.POST.get('delete_invoice_id')
+            print(f"DEBUG: Delete request received for invoice ID: {invoice_id}")
+            print(f"DEBUG: POST data: {dict(request.POST)}")
+            
             try:
                 with transaction.atomic():
                     invoice = Invoice.objects.select_related('user').prefetch_related('items').get(id=invoice_id)
+                    print(f"DEBUG: Found invoice {invoice.invoice_no} for deletion")
+                    
+                    # Store invoice data for success message and logging (since object will be deleted)
+                    invoice_no = invoice.invoice_no
+                    customer_name = invoice.customer_name
+                    invoice_items = list(invoice.items.all())  # Convert to list to avoid queryset issues
+                    
+                    print(f"DEBUG: Invoice has {len(invoice_items)} items")
                     
                     # Restore stock for all items in the invoice
-                    restore_stock_for_sale_items(invoice.items.all(), invoice.invoice_no)
+                    restore_stock_for_sale_items(invoice_items, invoice_no)
+                    print(f"DEBUG: Stock restored for invoice {invoice_no}")
                     
-                    # Log the deletion
+                    # Log the deletion before deleting
                     AdminLog.objects.create(
                         user=request.user,
                         action='Deleted Invoice (Stock Restored)',
-                        details=f'Invoice ID: {invoice_id}, Customer: {invoice.customer_name}'
+                        details=f'Invoice ID: {invoice_id}, Customer: {customer_name}'
                     )
+                    print(f"DEBUG: Admin log created for deletion")
                     
-                    invoice.delete()
-                    messages.success(request, 'Invoice deleted and stock quantities restored.')
+                    # Refresh invoice object from database before delete
+                    invoice.refresh_from_db()
+                    print(f"DEBUG: Invoice refreshed from database")
+                    
+                    # Delete the invoice using direct database query
+                    try:
+                        # First, let's check if the invoice still exists
+                        invoice_exists = Invoice.objects.filter(id=invoice_id).exists()
+                        print(f"DEBUG: Invoice exists before delete: {invoice_exists}")
+                        
+                        if invoice_exists:
+                            # Try deleting using queryset delete (bypasses model delete method)
+                            deleted_count = Invoice.objects.filter(id=invoice_id).delete()
+                            print(f"DEBUG: Deleted count: {deleted_count}")
+                            print(f"DEBUG: Invoice {invoice_no} deleted successfully via queryset")
+                            messages.success(request, f'Invoice {invoice_no} deleted and stock quantities restored.')
+                        else:
+                            print(f"DEBUG: Invoice {invoice_id} no longer exists in database")
+                            messages.error(request, 'Invoice was already deleted or does not exist.')
+                            
+                    except Exception as delete_error:
+                        print(f"DEBUG: Error during queryset delete: {str(delete_error)}")
+                        print(f"DEBUG: Delete error type: {type(delete_error)}")
+                        import traceback
+                        traceback.print_exc()
+                        raise delete_error
                     
             except Invoice.DoesNotExist:
+                print(f"DEBUG: Invoice with ID {invoice_id} not found")
                 messages.error(request, 'Invoice not found.')
             except Exception as e:
+                print(f"DEBUG: Error during deletion process: {str(e)}")
+                print(f"DEBUG: Error type: {type(e)}")
+                import traceback
+                traceback.print_exc()
                 messages.error(request, f'Error deleting invoice: {str(e)}')
             
             return redirect('manager_dashboard')

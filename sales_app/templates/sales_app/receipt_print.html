@@ -115,7 +115,7 @@
         }
     </style>
 </head>
-<body onload="window.print(); setTimeout(function(){ window.location.href = '/sales/sales_entry/'; }, 500);">
+<body onload="handlePrintAndRedirect();">
     <div class="receipt">
         <h2>Invoice Receipt</h2>
         
@@ -200,7 +200,64 @@
 
         <div class="text-center print-hidden">
             <button onclick="window.print()" class="print-button">Print Again</button>
+            <button onclick="goBackToEntry()" class="print-button" style="background-color: #6c757d; margin-left: 10px;">Back to Entry</button>
         </div>
     </div>
+
+    <script>
+        function handlePrintAndRedirect() {
+            try {
+                console.log('Receipt page loaded, attempting to print...');
+                
+                // Trigger print dialog
+                window.print();
+                
+                // Set up redirect with fallback options
+                setTimeout(function() {
+                    goBackToEntry();
+                }, 1000); // Increased timeout to allow print dialog
+                
+                // Also handle print dialog cancel/complete events
+                window.addEventListener('afterprint', function() {
+                    console.log('Print dialog completed');
+                    setTimeout(goBackToEntry, 500);
+                });
+                
+            } catch (error) {
+                console.error('Print error:', error);
+                // Fallback: show manual navigation option
+                alert('Print completed. Click OK to return to sales entry.');
+                goBackToEntry();
+            }
+        }
+        
+        function goBackToEntry() {
+            try {
+                console.log('Redirecting to sales entry...');
+                window.location.href = '/sales/sales_entry/';
+            } catch (error) {
+                console.error('Redirect error:', error);
+                // Ultimate fallback
+                if (window.history.length > 1) {
+                    window.history.back();
+                } else {
+                    window.location.reload();
+                }
+            }
+        }
+        
+        // Handle page visibility change (when user comes back from print)
+        document.addEventListener('visibilitychange', function() {
+            if (!document.hidden) {
+                console.log('Page became visible again');
+                // Optional: redirect after short delay when page becomes visible
+                setTimeout(function() {
+                    if (confirm('Print completed. Return to sales entry?')) {
+                        goBackToEntry();
+                    }
+                }, 1000);
+            }
+        });
+    </script>
 </body>
 </html>
