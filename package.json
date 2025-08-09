@@ -1,9 +1,13 @@
 {
   "dependencies": {
-    "@tailwindcss/cli": "^4.1.11",
-    "tailwindcss": "^4.1.11"
-  }, 
+    "@tailwindcss/cli": "^4.1.11"
+  },
   "scripts": {
-    "build:css": "npx @tailwindcss/cli -i ./core/static/css/input.css -o ./core/static/css/output.css --watch" 
+    "build:css": "npx @tailwindcss/cli -i ./core/static/css/input.css -o ./core/static/css/output.css --watch"
+  },
+  "devDependencies": {
+    "autoprefixer": "^10.4.21",
+    "postcss": "^8.5.6",
+    "tailwindcss": "^4.1.11"
   }
 }

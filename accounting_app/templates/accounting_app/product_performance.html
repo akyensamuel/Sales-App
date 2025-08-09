@@ -1,0 +1,246 @@
+{% extends "accounting_app/base.html" %}
+{% load static %}
+
+{% block page_title %}Product Performance{% endblock %}
+{% block nav_icon %}fas fa-box{% endblock %}
+
+{% block nav_extra_buttons %}
+<a href="{% url 'analytics_dashboard' %}" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors duration-200">
+    <i class="fas fa-chart-line mr-1"></i>Dashboard
+</a>
+<a href="{% url 'salesperson_performance' %}" class="bg-purple-600 hover:bg-purple-700 px-3 py-1 rounded transition-colors duration-200">
+    <i class="fas fa-users mr-1"></i>Staff
+</a>
+{% endblock %}
+
+{% block accounting_content %}
+    <!-- Header with Filters -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-box mr-2 text-amber-600 dark:text-amber-400"></i>Product Performance Analysis
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400">Detailed insights into product sales and profitability</p>
+        </div>
+        
+        <!-- Filters -->
+        <div class="flex flex-col sm:flex-row gap-2">
+            <!-- Period Filter -->
+            <select id="periodFilter" onchange="location.href='?period=' + this.value + (getProductFilter() ? '&product=' + getProductFilter() : '')" 
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                <option value="this_week" {% if period == 'this_week' %}selected{% endif %}>This Week</option>
+                <option value="this_month" {% if period == 'this_month' %}selected{% endif %}>This Month</option>
+                <option value="last_month" {% if period == 'last_month' %}selected{% endif %}>Last Month</option>
+                <option value="this_quarter" {% if period == 'this_quarter' %}selected{% endif %}>This Quarter</option>
+                <option value="this_year" {% if period == 'this_year' %}selected{% endif %}>This Year</option>
+                <option value="last_30_days" {% if period == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                <option value="last_90_days" {% if period == 'last_90_days' %}selected{% endif %}>Last 90 Days</option>
+            </select>
+            
+            <!-- Search -->
+            <form method="get" class="flex">
+                <input type="hidden" name="period" value="{{ period|default:'this_month' }}">
+                <input type="text" name="product" value="{{ product_filter }}" 
+                       placeholder="Search products..." 
+                       class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white px-3 py-2 rounded-l-lg focus:outline-none focus:ring-2 focus:ring-blue-500 w-48">
+                <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-r-lg transition-colors duration-200">
+                    <i class="fas fa-search"></i>
+                </button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Products</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_products|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                    <i class="fas fa-box text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ total_revenue|default:0|floatformat:2 }}</p>
+                </div>
+                <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                    <i class="fas fa-dollar-sign text-blue-600 dark:text-blue-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Units Sold</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_units_sold|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                    <i class="fas fa-shopping-cart text-purple-600 dark:text-purple-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-amber-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Margin</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ avg_margin|default:0|floatformat:1 }}%</p>
+                </div>
+                <div class="p-3 bg-amber-100 dark:bg-amber-900 rounded-full">
+                    <i class="fas fa-percentage text-amber-600 dark:text-amber-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Product Performance Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-colors duration-200">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <i class="fas fa-table mr-2 text-gray-600 dark:text-gray-400"></i>Product Performance Details
+            </h3>
+        </div>
+        
+        {% if products %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Product</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Revenue</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Units Sold</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Avg Price</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Profit</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for product in products %}
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-box text-blue-600 dark:text-blue-400"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900 dark:text-white">{{ product.product_name|default:"Unknown Product" }}</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ product.number_of_sales|default:0 }} sale{{ product.number_of_sales|pluralize }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm">
+                                        <p class="font-semibold text-gray-900 dark:text-white">${{ product.total_revenue|default:0|floatformat:2 }}</p>
+                                        <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-1">
+                                            <div class="bg-green-600 h-2 rounded-full" style="width: {{ product.revenue_percentage|default:0 }}%"></div>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-gray-900 dark:text-white">{{ product.total_quantity_sold|default:0 }}</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">units</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-gray-900 dark:text-white">${{ product.average_unit_price|default:0|floatformat:2 }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <div class="text-sm">
+                                        <p class="font-semibold {% if product.total_profit >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
+                                            ${{ product.total_profit|default:0|floatformat:2 }}
+                                        </p>
+                                        <p class="text-xs text-gray-600 dark:text-gray-400">{{ product.profit_margin|default:0|floatformat:1 }}% margin</p>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                        {% if product.performance_rating == 'excellent' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                        {% elif product.performance_rating == 'good' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                        {% elif product.performance_rating == 'average' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                        {% elif product.performance_rating == 'below_average' %}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200
+                                        {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                                        {{ product.performance_rating|default:"Unknown"|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <!-- Pagination -->
+            {% if is_paginated %}
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}&period={{ period }}{% if product_filter %}&product={{ product_filter }}{% endif %}" 
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    Previous
+                                </a>
+                            {% endif %}
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}&period={{ period }}{% if product_filter %}&product={{ product_filter }}{% endif %}" 
+                                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    Next
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700 dark:text-gray-300">
+                                    Showing <span class="font-medium">{{ page_obj.start_index }}</span> to <span class="font-medium">{{ page_obj.end_index }}</span> of <span class="font-medium">{{ page_obj.paginator.count }}</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                    {% if page_obj.has_previous %}
+                                        <a href="?page={{ page_obj.previous_page_number }}&period={{ period }}{% if product_filter %}&product={{ product_filter }}{% endif %}" 
+                                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if page_obj.has_next %}
+                                        <a href="?page={{ page_obj.next_page_number }}&period={{ period }}{% if product_filter %}&product={{ product_filter }}{% endif %}" 
+                                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    {% endif %}
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-box-open text-6xl mb-4"></i>
+                <h3 class="text-lg font-semibold mb-2">No Product Data</h3>
+                <p>No product performance data available for the selected period.</p>
+                <div class="mt-4 space-x-2">
+                    <a href="{% url 'analytics_dashboard' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+                        <i class="fas fa-chart-line mr-2"></i>Back to Dashboard
+                    </a>
+                    <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+    function getProductFilter() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('product') || '';
+    }
+    </script>
+{% endblock %}

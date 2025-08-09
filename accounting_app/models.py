@@ -122,3 +122,91 @@ class FinancialForecast(models.Model):
 
     def __str__(self):
         return f"{self.job_type} - {self.forecast_date}"
+
+
+class ProductPerformance(models.Model):
+    """Track product sales performance over time"""
+    product_name = models.CharField(max_length=100, db_index=True)
+    period_start = models.DateField(db_index=True)
+    period_end = models.DateField(db_index=True)
+    total_quantity_sold = models.IntegerField(default=0)
+    total_revenue = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_profit = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Revenue minus cost")
+    average_selling_price = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    number_of_sales = models.IntegerField(default=0, help_text="Number of individual sales transactions")
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['product_name', 'period_start', 'period_end']
+        ordering = ['-total_revenue', '-total_quantity_sold']
+        indexes = [
+            models.Index(fields=['product_name', 'period_start']),
+            models.Index(fields=['total_revenue']),
+            models.Index(fields=['total_quantity_sold']),
+        ]
+    
+    def __str__(self):
+        return f"{self.product_name} - {self.period_start} to {self.period_end}"
+    
+    @property
+    def profit_margin(self):
+        """Calculate profit margin percentage"""
+        if self.total_revenue > 0:
+            return (self.total_profit / self.total_revenue) * 100
+        return 0
+
+
+class SalesPersonPerformance(models.Model):
+    """Track individual salesperson performance metrics"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
+    period_start = models.DateField(db_index=True)
+    period_end = models.DateField(db_index=True)
+    total_sales_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_invoices = models.IntegerField(default=0)
+    total_items_sold = models.IntegerField(default=0)
+    average_sale_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    conversion_rate = models.DecimalField(max_digits=5, decimal_places=2, default=0, help_text="Percentage of successful sales")
+    performance_rating = models.CharField(
+        max_length=20, 
+        choices=[
+            ('excellent', 'Excellent'),
+            ('good', 'Good'),
+            ('average', 'Average'),
+            ('below_average', 'Below Average'),
+            ('poor', 'Poor')
+        ],
+        default='average'
+    )
+    commission_earned = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['user', 'period_start', 'period_end']
+        ordering = ['-total_sales_amount', '-total_invoices']
+        indexes = [
+            models.Index(fields=['user', 'period_start']),
+            models.Index(fields=['total_sales_amount']),
+            models.Index(fields=['performance_rating']),
+        ]
+    
+    def __str__(self):
+        return f"{self.user.get_full_name() or self.user.username} - {self.period_start} to {self.period_end}"
+    
+    def calculate_performance_rating(self):
+        """Auto-calculate performance rating based on metrics"""
+        if self.total_sales_amount >= 50000:
+            return 'excellent'
+        elif self.total_sales_amount >= 30000:
+            return 'good'
+        elif self.total_sales_amount >= 15000:
+            return 'average'
+        elif self.total_sales_amount >= 5000:
+            return 'below_average'
+        else:
+            return 'poor'
+    
+    def save(self, *args, **kwargs):
+        # Auto-calculate performance rating
+        if not self.performance_rating or self.performance_rating == 'average':
+            self.performance_rating = self.calculate_performance_rating()
+        super().save(*args, **kwargs)

@@ -1,0 +1,319 @@
+{% extends "accounting_app/base.html" %}
+{% load static %}
+
+{% block page_title %}Staff Performance{% endblock %}
+{% block nav_icon %}fas fa-users{% endblock %}
+
+{% block nav_extra_buttons %}
+<a href="{% url 'analytics_dashboard' %}" class="bg-blue-600 hover:bg-blue-700 px-3 py-1 rounded transition-colors duration-200">
+    <i class="fas fa-chart-line mr-1"></i>Dashboard
+</a>
+<a href="{% url 'product_performance' %}" class="bg-amber-600 hover:bg-amber-700 px-3 py-1 rounded transition-colors duration-200">
+    <i class="fas fa-box mr-1"></i>Products
+</a>
+{% endblock %}
+
+{% block accounting_content %}
+    <!-- Header with Filters -->
+    <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
+        <div>
+            <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <i class="fas fa-users mr-2 text-teal-600 dark:text-teal-400"></i>Staff Performance Analysis
+            </h2>
+            <p class="text-gray-600 dark:text-gray-400">Manager and Cashier performance rankings and metrics</p>
+        </div>
+        
+        <!-- Filters -->
+        <div class="flex flex-col sm:flex-row gap-2">
+            <!-- Period Filter -->
+            <select id="periodFilter" onchange="location.href='?period=' + this.value + (getRoleFilter() ? '&role=' + getRoleFilter() : '')" 
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="today" {% if period == 'today' %}selected{% endif %}>Today</option>
+                <option value="this_week" {% if period == 'this_week' %}selected{% endif %}>This Week</option>
+                <option value="this_month" {% if period == 'this_month' %}selected{% endif %}>This Month</option>
+                <option value="last_month" {% if period == 'last_month' %}selected{% endif %}>Last Month</option>
+                <option value="this_quarter" {% if period == 'this_quarter' %}selected{% endif %}>This Quarter</option>
+                <option value="this_year" {% if period == 'this_year' %}selected{% endif %}>This Year</option>
+                <option value="last_30_days" {% if period == 'last_30_days' %}selected{% endif %}>Last 30 Days</option>
+                <option value="last_90_days" {% if period == 'last_90_days' %}selected{% endif %}>Last 90 Days</option>
+            </select>
+            
+            <!-- Role Filter -->
+            <select id="roleFilter" onchange="location.href='?period=' + getPeriodFilter() + '&role=' + this.value" 
+                    class="bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 text-gray-900 dark:text-white px-3 py-2 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+                <option value="" {% if not role_filter %}selected{% endif %}>All Roles</option>
+                <option value="Managers" {% if role_filter == 'Managers' %}selected{% endif %}>Managers</option>
+                <option value="Cashiers" {% if role_filter == 'Cashiers' %}selected{% endif %}>Cashiers</option>
+            </select>
+        </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-blue-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Staff</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_staff|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
+                    <i class="fas fa-users text-blue-600 dark:text-blue-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-green-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Sales</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ total_sales|default:0|floatformat:2 }}</p>
+                </div>
+                <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
+                    <i class="fas fa-dollar-sign text-green-600 dark:text-green-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Invoices</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ total_invoices|default:0 }}</p>
+                </div>
+                <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                    <i class="fas fa-receipt text-purple-600 dark:text-purple-400"></i>
+                </div>
+            </div>
+        </div>
+
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-amber-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Sale Value</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ avg_sale_value|default:0|floatformat:2 }}</p>
+                </div>
+                <div class="p-3 bg-amber-100 dark:bg-amber-900 rounded-full">
+                    <i class="fas fa-chart-bar text-amber-600 dark:text-amber-400"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Performance Leaderboard -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-colors duration-200 mb-8">
+        <div class="px-6 py-4 bg-gradient-to-r from-teal-500 to-blue-600 text-white">
+            <h3 class="text-lg font-semibold">
+                <i class="fas fa-trophy mr-2"></i>Performance Leaderboard
+            </h3>
+            <p class="text-sm opacity-90">Top performing staff members for {{ period|default:"this month"|title }}</p>
+        </div>
+        
+        {% if staff_performance %}
+            <div class="p-6">
+                {% for person in staff_performance %}
+                    <div class="flex items-center justify-between p-4 mb-4 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-600 rounded-lg border-l-4 
+                        {% if forloop.counter == 1 %}border-yellow-400
+                        {% elif forloop.counter == 2 %}border-gray-400
+                        {% elif forloop.counter == 3 %}border-amber-600
+                        {% else %}border-gray-300{% endif %} 
+                        hover:shadow-md transition-all duration-200">
+                        
+                        <div class="flex items-center">
+                            <!-- Rank Badge -->
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center font-bold text-white mr-4
+                                {% if forloop.counter == 1 %}bg-yellow-500
+                                {% elif forloop.counter == 2 %}bg-gray-500
+                                {% elif forloop.counter == 3 %}bg-amber-600
+                                {% else %}bg-gray-400{% endif %}">
+                                {{ forloop.counter }}
+                            </div>
+                            
+                            <!-- Staff Info -->
+                            <div class="flex items-center">
+                                <div class="w-12 h-12 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center mr-4">
+                                    <i class="fas fa-user text-teal-600 dark:text-teal-400 text-lg"></i>
+                                </div>
+                                <div>
+                                    <h4 class="font-semibold text-gray-900 dark:text-white text-lg">{{ person.user_name|default:"Unknown User" }}</h4>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                                        {% if person.user_groups %}
+                                            {% for group in person.user_groups %}{{ group }}{% if not forloop.last %}, {% endif %}{% endfor %}
+                                        {% else %}
+                                            Staff Member
+                                        {% endif %}
+                                    </p>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Performance Metrics -->
+                        <div class="text-right">
+                            <p class="text-xl font-bold text-gray-900 dark:text-white">${{ person.total_sales_amount|default:0|floatformat:2 }}</p>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">{{ person.total_invoices|default:0 }} invoice{{ person.total_invoices|pluralize }}</p>
+                            <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full
+                                {% if person.performance_rating == 'excellent' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                {% elif person.performance_rating == 'good' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                {% elif person.performance_rating == 'average' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                {% elif person.performance_rating == 'below_average' %}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200
+                                {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                                {{ person.performance_rating|default:"Unknown"|title }}
+                            </span>
+                        </div>
+                    </div>
+                {% endfor %}
+            </div>
+            
+            <!-- Pagination for Leaderboard -->
+            {% if is_paginated %}
+                <div class="px-6 py-4 bg-gray-50 dark:bg-gray-700 border-t border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center justify-between">
+                        <div class="flex-1 flex justify-between sm:hidden">
+                            {% if page_obj.has_previous %}
+                                <a href="?page={{ page_obj.previous_page_number }}&period={{ period }}{% if role_filter %}&role={{ role_filter }}{% endif %}" 
+                                   class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    Previous
+                                </a>
+                            {% endif %}
+                            {% if page_obj.has_next %}
+                                <a href="?page={{ page_obj.next_page_number }}&period={{ period }}{% if role_filter %}&role={{ role_filter }}{% endif %}" 
+                                   class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    Next
+                                </a>
+                            {% endif %}
+                        </div>
+                        <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                            <div>
+                                <p class="text-sm text-gray-700 dark:text-gray-300">
+                                    Showing <span class="font-medium">{{ page_obj.start_index }}</span> to <span class="font-medium">{{ page_obj.end_index }}</span> of <span class="font-medium">{{ page_obj.paginator.count }}</span> results
+                                </p>
+                            </div>
+                            <div>
+                                <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px">
+                                    {% if page_obj.has_previous %}
+                                        <a href="?page={{ page_obj.previous_page_number }}&period={{ period }}{% if role_filter %}&role={{ role_filter }}{% endif %}" 
+                                           class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <i class="fas fa-chevron-left"></i>
+                                        </a>
+                                    {% endif %}
+                                    {% if page_obj.has_next %}
+                                        <a href="?page={{ page_obj.next_page_number }}&period={{ period }}{% if role_filter %}&role={{ role_filter }}{% endif %}" 
+                                           class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                            <i class="fas fa-chevron-right"></i>
+                                        </a>
+                                    {% endif %}
+                                </nav>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            {% endif %}
+        {% else %}
+            <div class="text-center py-12 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-users text-6xl mb-4"></i>
+                <h3 class="text-lg font-semibold mb-2">No Staff Data</h3>
+                <p>No staff performance data available for the selected period.</p>
+                <div class="mt-4 space-x-2">
+                    <a href="{% url 'analytics_dashboard' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg transition-colors duration-200">
+                        <i class="fas fa-chart-line mr-2"></i>Back to Dashboard
+                    </a>
+                    <button onclick="location.reload()" class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white rounded-lg transition-colors duration-200">
+                        <i class="fas fa-refresh mr-2"></i>Refresh
+                    </button>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Detailed Performance Table -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md overflow-hidden transition-colors duration-200">
+        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <i class="fas fa-table mr-2 text-gray-600 dark:text-gray-400"></i>Detailed Performance Metrics
+            </h3>
+        </div>
+        
+        {% if staff_performance %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Staff Member</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Role</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sales Amount</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Invoices</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Avg Sale</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Commission</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rating</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for person in staff_performance %}
+                            <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                                <td class="px-6 py-4">
+                                    <div class="flex items-center">
+                                        <div class="w-10 h-10 bg-teal-100 dark:bg-teal-900 rounded-full flex items-center justify-center mr-3">
+                                            <i class="fas fa-user text-teal-600 dark:text-teal-400"></i>
+                                        </div>
+                                        <div>
+                                            <p class="font-medium text-gray-900 dark:text-white">{{ person.user_name|default:"Unknown User" }}</p>
+                                            <p class="text-sm text-gray-600 dark:text-gray-400">ID: {{ person.user_id|default:"N/A" }}</p>
+                                        </div>
+                                    </div>
+                                </td>
+                                <td class="px-6 py-4">
+                                    {% if person.user_groups %}
+                                        {% for group in person.user_groups %}
+                                            <span class="inline-block px-2 py-1 text-xs font-medium rounded-full mr-1
+                                                {% if group == 'Managers' %}bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200
+                                                {% else %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% endif %}">
+                                                {{ group }}
+                                            </span>
+                                        {% endfor %}
+                                    {% else %}
+                                        <span class="inline-block px-2 py-1 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-900 dark:text-gray-200">
+                                            Staff
+                                        </span>
+                                    {% endif %}
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-gray-900 dark:text-white">${{ person.total_sales_amount|default:0|floatformat:2 }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-gray-900 dark:text-white">{{ person.total_invoices|default:0 }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-gray-900 dark:text-white">${{ person.average_sale_value|default:0|floatformat:2 }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <p class="font-semibold text-green-600 dark:text-green-400">${{ person.commission_earned|default:0|floatformat:2 }}</p>
+                                </td>
+                                <td class="px-6 py-4">
+                                    <span class="px-2 py-1 text-xs font-semibold rounded-full
+                                        {% if person.performance_rating == 'excellent' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
+                                        {% elif person.performance_rating == 'good' %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200
+                                        {% elif person.performance_rating == 'average' %}bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200
+                                        {% elif person.performance_rating == 'below_average' %}bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200
+                                        {% else %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200{% endif %}">
+                                        {{ person.performance_rating|default:"Unknown"|title }}
+                                    </span>
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% endif %}
+    </div>
+
+    <script>
+    function getRoleFilter() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('role') || '';
+    }
+    
+    function getPeriodFilter() {
+        const urlParams = new URLSearchParams(window.location.search);
+        return urlParams.get('period') || 'this_month';
+    }
+    </script>
+{% endblock %}

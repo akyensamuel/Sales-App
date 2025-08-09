@@ -182,6 +182,39 @@
                         </div>
                     </div>
                 </a>
+                
+                <a href="{% url 'analytics_dashboard' %}" 
+                   class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200 bg-gradient-to-r from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20">
+                    <div class="flex items-center">
+                        <i class="fas fa-analytics text-blue-600 dark:text-blue-400 text-2xl mr-4"></i>
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white">Sales Analytics</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Product performance & staff metrics</p>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'product_performance' %}" 
+                   class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-box text-amber-600 dark:text-amber-400 text-2xl mr-4"></i>
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white">Product Performance</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Top selling products & trends</p>
+                        </div>
+                    </div>
+                </a>
+                
+                <a href="{% url 'salesperson_performance' %}" 
+                   class="p-4 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200">
+                    <div class="flex items-center">
+                        <i class="fas fa-users text-teal-600 dark:text-teal-400 text-2xl mr-4"></i>
+                        <div>
+                            <h4 class="font-medium text-gray-900 dark:text-white">Staff Performance</h4>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Manager & cashier rankings</p>
+                        </div>
+                    </div>
+                </a>
             </div>
         </div>
 {% endblock %}

@@ -14,9 +14,10 @@ from calendar import monthrange
 
 from .models import (
     FinancialForecast, Expense, ExpenseCategory, ProfitLossSnapshot,
-    TaxSettings, AccountingAuditLog
+    TaxSettings, AccountingAuditLog, ProductPerformance, SalesPersonPerformance
 )
 from sales_app.models import Invoice, Sale
+from .analytics import AnalyticsEngine
 
 def is_admin(user):
     return user.is_authenticated and user.groups.filter(name='Admin').exists()
@@ -387,11 +388,19 @@ def revenue_tracking(request):
     # Calculate total revenue for 12 months
     total_12_month_revenue = sum(month['revenue'] for month in monthly_data)
     
+    # Check if user can edit invoices (either Admin, Manager, or superuser)
+    can_edit_invoices = (
+        request.user.is_superuser or 
+        request.user.groups.filter(name='Admin').exists() or 
+        request.user.groups.filter(name='Managers').exists()
+    )
+    
     context = {
         'monthly_data': monthly_data,
         'total_12_month_revenue': total_12_month_revenue,
         'outstanding_invoices': outstanding_invoices,
         'status_breakdown': status_breakdown,
+        'can_edit_invoices': can_edit_invoices,
     }
     
     return render(request, 'accounting_app/revenue_tracking.html', context)
@@ -399,3 +408,276 @@ def revenue_tracking(request):
 # Legacy forecast dashboard for compatibility
 def forecast_dashboard(request):
     return redirect('accounting_dashboard')
+
+
+# === ANALYTICS VIEWS ===
+
+@login_required
+@user_passes_test(is_admin)
+def analytics_dashboard(request):
+    """Main analytics dashboard showing product and salesperson performance"""
+    period = request.GET.get('period', 'this_month')
+    
+    # Generate analytics summary
+    summary = AnalyticsEngine.generate_analytics_summary(period)
+    
+    # Get date ranges for the dropdown
+    date_ranges = AnalyticsEngine.get_date_ranges()
+    
+    log_audit_action(
+        request.user, 
+        'view', 
+        'AnalyticsDashboard', 
+        details=f'Viewed analytics dashboard for period: {period}'
+    )
+    
+    context = {
+        'summary': summary,
+        'period': period,
+        'date_ranges': date_ranges,
+        'page_title': 'Analytics Dashboard'
+    }
+    
+    return render(request, 'accounting_app/analytics_dashboard.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def product_performance(request):
+    """Detailed product performance analysis"""
+    period = request.GET.get('period', 'this_month')
+    product_filter = request.GET.get('product', '')
+    
+    date_ranges = AnalyticsEngine.get_date_ranges()
+    start_date, end_date = date_ranges.get(period, date_ranges['this_month'])
+    
+    # Get product performance data
+    product_data = AnalyticsEngine.calculate_product_performance(start_date, end_date, update_db=True)
+    
+    # Filter by product if specified
+    if product_filter:
+        product_data = [p for p in product_data if product_filter.lower() in p['product_name'].lower()]
+    
+    # Pagination
+    paginator = Paginator(product_data, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get top products for quick stats
+    top_products = product_data[:5] if product_data else []
+    
+    # Calculate totals
+    total_revenue = sum(item['total_revenue'] for item in product_data)
+    total_profit = sum(item['total_profit'] for item in product_data)
+    total_items_sold = sum(item['total_quantity_sold'] for item in product_data)
+    
+    log_audit_action(
+        request.user,
+        'view',
+        'ProductPerformance',
+        details=f'Viewed product performance for period: {period}'
+    )
+    
+    context = {
+        'products': page_obj,
+        'top_products': top_products,
+        'period': period,
+        'product_filter': product_filter,
+        'date_ranges': date_ranges,
+        'total_revenue': total_revenue,
+        'total_profit': total_profit,
+        'total_items_sold': total_items_sold,
+        'profit_margin': (total_profit / total_revenue * 100) if total_revenue > 0 else 0,
+        'page_title': 'Product Performance',
+        # Template-expected variables
+        'total_products': len(product_data),
+        'total_units_sold': total_items_sold,
+        'avg_margin': (total_profit / total_revenue * 100) if total_revenue > 0 else 0,
+    }
+    
+    return render(request, 'accounting_app/product_performance.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def salesperson_performance(request):
+    """Detailed salesperson performance analysis"""
+    period = request.GET.get('period', 'this_month')
+    user_filter = request.GET.get('user', '')
+    
+    date_ranges = AnalyticsEngine.get_date_ranges()
+    start_date, end_date = date_ranges.get(period, date_ranges['this_month'])
+    
+    # Get salesperson performance data
+    performance_data = AnalyticsEngine.calculate_salesperson_performance(start_date, end_date, update_db=True)
+    
+    # Filter by user if specified
+    if user_filter:
+        performance_data = [p for p in performance_data if user_filter.lower() in (p['user'].get_full_name() or p['user'].username).lower()]
+    
+    # Pagination
+    paginator = Paginator(performance_data, 20)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+    
+    # Get top performers for quick stats
+    top_performers = performance_data[:5] if performance_data else []
+    
+    # Calculate totals
+    total_sales = sum(item['total_sales_amount'] for item in performance_data)
+    total_invoices = sum(item['total_invoices'] for item in performance_data)
+    total_commission = sum(item['commission_earned'] for item in performance_data)
+    
+    log_audit_action(
+        request.user,
+        'view',
+        'SalespersonPerformance',
+        details=f'Viewed salesperson performance for period: {period}'
+    )
+    
+    context = {
+        'salespeople': page_obj,
+        'top_performers': top_performers,
+        'period': period,
+        'user_filter': user_filter,
+        'date_ranges': date_ranges,
+        'total_sales': total_sales,
+        'total_invoices': total_invoices,
+        'total_commission': total_commission,
+        'average_sale_value': total_sales / total_invoices if total_invoices > 0 else 0,
+        'page_title': 'Salesperson Performance',
+        # Template-expected variables
+        'staff_performance': page_obj,
+        'total_staff': len(performance_data),
+    }
+    
+    return render(request, 'accounting_app/salesperson_performance.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def product_trends(request, product_name):
+    """Show product performance trends over time"""
+    months = int(request.GET.get('months', 6))
+    
+    # Get trend data
+    trends = AnalyticsEngine.get_product_trends(product_name, months)
+    
+    # Prepare chart data
+    chart_data = {
+        'labels': [trend.period_start.strftime('%b %Y') for trend in trends],
+        'revenue': [float(trend.total_revenue) for trend in trends],
+        'quantity': [trend.total_quantity_sold for trend in trends],
+        'profit': [float(trend.total_profit) for trend in trends]
+    }
+    
+    log_audit_action(
+        request.user,
+        'view',
+        'ProductTrends',
+        object_id=product_name,
+        details=f'Viewed trends for product: {product_name}'
+    )
+    
+    context = {
+        'product_name': product_name,
+        'trends': trends,
+        'chart_data': json.dumps(chart_data),
+        'months': months,
+        'page_title': f'Trends - {product_name}'
+    }
+    
+    return render(request, 'accounting_app/product_trends.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def salesperson_trends(request, user_id):
+    """Show salesperson performance trends over time"""
+    months = int(request.GET.get('months', 6))
+    
+    # Get user and trend data
+    from django.contrib.auth.models import User
+    user = get_object_or_404(User, id=user_id)
+    trends = AnalyticsEngine.get_salesperson_trends(user_id, months)
+    
+    # Prepare chart data
+    chart_data = {
+        'labels': [trend.period_start.strftime('%b %Y') for trend in trends],
+        'sales': [float(trend.total_sales_amount) for trend in trends],
+        'invoices': [trend.total_invoices for trend in trends],
+        'conversion': [float(trend.conversion_rate) for trend in trends]
+    }
+    
+    log_audit_action(
+        request.user,
+        'view',
+        'SalespersonTrends',
+        object_id=str(user_id),
+        details=f'Viewed trends for user: {user.username}'
+    )
+    
+    context = {
+        'salesperson': user,
+        'trends': trends,
+        'chart_data': json.dumps(chart_data),
+        'months': months,
+        'page_title': f'Trends - {user.get_full_name() or user.username}'
+    }
+    
+    return render(request, 'accounting_app/salesperson_trends.html', context)
+
+
+@login_required
+@user_passes_test(is_admin)
+def analytics_api(request):
+    """API endpoint for analytics data (for AJAX requests)"""
+    period = request.GET.get('period', 'this_month')
+    data_type = request.GET.get('type', 'summary')
+    
+    try:
+        if data_type == 'summary':
+            data = AnalyticsEngine.generate_analytics_summary(period)
+        elif data_type == 'products':
+            date_ranges = AnalyticsEngine.get_date_ranges()
+            start_date, end_date = date_ranges.get(period, date_ranges['this_month'])
+            products = AnalyticsEngine.calculate_product_performance(start_date, end_date, update_db=False)
+            data = {'products': products[:10]}  # Top 10
+        elif data_type == 'salespeople':
+            date_ranges = AnalyticsEngine.get_date_ranges()
+            start_date, end_date = date_ranges.get(period, date_ranges['this_month'])
+            salespeople = AnalyticsEngine.calculate_salesperson_performance(start_date, end_date, update_db=False)
+            # Convert User objects to serializable format
+            serializable_data = []
+            for sp in salespeople[:10]:
+                sp_copy = sp.copy()
+                sp_copy['user'] = {
+                    'id': sp['user'].id,
+                    'username': sp['user'].username,
+                    'full_name': sp['user'].get_full_name() or sp['user'].username
+                }
+                # Convert Decimal to float for JSON serialization
+                for key, value in sp_copy.items():
+                    if isinstance(value, Decimal):
+                        sp_copy[key] = float(value)
+                serializable_data.append(sp_copy)
+            data = {'salespeople': serializable_data}
+        else:
+            return JsonResponse({'error': 'Invalid data type'}, status=400)
+        
+        # Convert Decimal values to float for JSON serialization
+        def decimal_to_float(obj):
+            if isinstance(obj, dict):
+                return {k: decimal_to_float(v) for k, v in obj.items()}
+            elif isinstance(obj, list):
+                return [decimal_to_float(item) for item in obj]
+            elif isinstance(obj, Decimal):
+                return float(obj)
+            return obj
+        
+        data = decimal_to_float(data)
+        
+        return JsonResponse(data)
+    
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=500)
