@@ -13,6 +13,7 @@ class Invoice(models.Model):
     
     invoice_no = models.CharField(max_length=20, unique=True, editable=False, null=True, blank=True, db_index=True)
     customer_name = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    customer_phone = models.CharField(max_length=20, null=True, blank=True, help_text="Customer's phone number")
     date_of_sale = models.DateField(default=timezone.now, null=True, blank=True, db_index=True)
     due_date = models.DateField(null=True, blank=True, db_index=True)
     notes = models.TextField(blank=True, null=True)

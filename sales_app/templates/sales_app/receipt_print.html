@@ -135,6 +135,12 @@
                 <span class="label">Customer:</span> {{ invoice.customer_name }}
             </div>
             
+            {% if invoice.customer_phone %}
+            <div class="info-row">
+                <span class="label">Phone:</span> {{ invoice.customer_phone }}
+            </div>
+            {% endif %}
+            
             <div class="info-row">
                 <span class="label">User:</span> {{ invoice.user.username }}
             </div>

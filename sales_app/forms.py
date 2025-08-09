@@ -6,7 +6,7 @@ from .models import Invoice, Sale, Product
 class SalesCSVImportForm(forms.Form):
     csv_file = forms.FileField(
         label="Select CSV file",
-        help_text="CSV file with sales data. Headers: Date of Sale,Invoice No,User,Customer Name,CUSTOMER NO,Item,Quantity,Unit Price,total_amount,AMT PAID,BAL TO BE PAID"
+        help_text="CSV file with sales data. Headers: Date of Sale,Invoice No,User,Customer Name,Customer Phone,CUSTOMER NO,Item,Quantity,Unit Price,total_amount,AMT PAID,BAL TO BE PAID"
     )
 
 class ProductForm(forms.ModelForm):
@@ -24,9 +24,10 @@ class InvoiceForm(forms.ModelForm):
     class Meta:
         model = Invoice
         # Remove 'discount' from fields
-        fields = ['customer_name', 'date_of_sale', 'notes', 'amount_paid']
+        fields = ['customer_name', 'customer_phone', 'date_of_sale', 'notes', 'amount_paid']
         widgets = {
             'customer_name': forms.TextInput(attrs={'class': 'form-control'}),
+            'customer_phone': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Enter phone number'}),
             'date_of_sale': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'amount_paid': forms.NumberInput(attrs={'class': 'form-control', 'step': '0.01'}),

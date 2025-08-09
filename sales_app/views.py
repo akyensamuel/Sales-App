@@ -163,6 +163,7 @@ def process_csv_import(csv_file):
             invoice_no = row.get('Invoice No') or row.get('INV NO')
             teller = row.get('User') or row.get('TELLER')
             customer_name = row.get('Customer Name') or row.get('CUSTOMER NA')
+            customer_phone = row.get('Customer Phone') or row.get('CUSTOMER_PHONE') or row.get('Phone')
             customer_number = row.get('CUSTOMER NO')
             item = row.get('Item') or row.get('TYPE OF JOB')
             quantity = int(float(row.get('Quantity') or row.get('QTY') or 1))
@@ -175,6 +176,7 @@ def process_csv_import(csv_file):
                 invoice_no=invoice_no,
                 defaults={
                     'customer_name': customer_name,
+                    'customer_phone': customer_phone,
                     'date_of_sale': date_of_sale,
                     'amount_paid': amount_paid,
                     'total': total_amount,
@@ -649,9 +651,10 @@ def manager_dashboard(request):
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     customer_name = request.GET.get('customer_name', '').strip()
+    customer_phone = request.GET.get('customer_phone', '').strip()
     invoice_no = request.GET.get('invoice_no', '').strip()
     
-    has_search_params = any([start_date, end_date, customer_name, invoice_no])
+    has_search_params = any([start_date, end_date, customer_name, customer_phone, invoice_no])
     
     if has_search_params:
         search_conditions = Q()
@@ -667,6 +670,10 @@ def manager_dashboard(request):
         # Customer name search
         if customer_name:
             search_conditions |= Q(customer_name__icontains=customer_name)
+        
+        # Customer phone search
+        if customer_phone:
+            search_conditions |= Q(customer_phone__icontains=customer_phone)
         
         # Invoice number search
         if invoice_no:
@@ -702,6 +709,7 @@ def manager_dashboard(request):
             'start_date': start_date,
             'end_date': end_date,
             'customer_name': customer_name,
+            'customer_phone': customer_phone,
             'invoice_no': invoice_no,
         },
         'form': csv_form,
