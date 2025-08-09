@@ -9,7 +9,8 @@ def total_outstanding(invoices):
     """Calculate total outstanding amount from a list of invoices"""
     total = 0
     for invoice in invoices:
-        total += invoice.balance
+        if hasattr(invoice, 'balance') and invoice.balance:
+            total += invoice.balance
     return total
 
 @register.filter
@@ -17,7 +18,7 @@ def count_overdue(invoices):
     """Count overdue invoices"""
     count = 0
     for invoice in invoices:
-        if invoice.payment_status == 'overdue':
+        if hasattr(invoice, 'payment_status') and invoice.payment_status == 'overdue':
             count += 1
     return count
 
@@ -27,7 +28,8 @@ def count_old_invoices(invoices, days):
     cutoff_date = timezone.now().date() - timedelta(days=int(days))
     count = 0
     for invoice in invoices:
-        if invoice.date_of_sale <= cutoff_date:
+        # Check if date_of_sale exists and is not None before comparing
+        if invoice.date_of_sale and invoice.date_of_sale <= cutoff_date:
             count += 1
     return count
 

@@ -20,6 +20,16 @@
                     New Sale
                 </a>
                 
+                <!-- CSV Import Button -->
+                {% if request.user.is_superuser or request.user.groups.all %}
+                <button id="importButton" type="button" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm shadow transition focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                    </svg>
+                    Import Sales CSV
+                </button>
+                {% endif %}
+                
                 {% load group_filters %}
                 {% if request.user|has_group:'Admin' %}
                 <a href="{% url 'products' %}" class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg text-sm shadow transition focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
@@ -333,12 +343,92 @@
                 </tbody>
             </table>
         </div>
+        
+        <!-- Pagination -->
+        {% if invoices.has_other_pages %}
+        <div class="px-6 py-4 border-t border-gray-200 dark:border-gray-700">
+            <nav class="flex items-center justify-between">
+                <div class="flex-1 flex justify-between sm:hidden">
+                    {% if invoices.has_previous %}
+                        <a href="?{% if search_params.start_date %}start_date={{ search_params.start_date }}&{% endif %}{% if search_params.end_date %}end_date={{ search_params.end_date }}&{% endif %}{% if search_params.customer_name %}customer_name={{ search_params.customer_name }}&{% endif %}{% if search_params.invoice_no %}invoice_no={{ search_params.invoice_no }}&{% endif %}page={{ invoices.previous_page_number }}" 
+                           class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            Previous
+                        </a>
+                    {% endif %}
+                    {% if invoices.has_next %}
+                        <a href="?{% if search_params.start_date %}start_date={{ search_params.start_date }}&{% endif %}{% if search_params.end_date %}end_date={{ search_params.end_date }}&{% endif %}{% if search_params.customer_name %}customer_name={{ search_params.customer_name }}&{% endif %}{% if search_params.invoice_no %}invoice_no={{ search_params.invoice_no }}&{% endif %}page={{ invoices.next_page_number }}" 
+                           class="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 text-sm font-medium rounded-md text-gray-700 dark:text-gray-200 bg-white dark:bg-gray-800 hover:bg-gray-50 dark:hover:bg-gray-700">
+                            Next
+                        </a>
+                    {% endif %}
+                </div>
+                <div class="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                    <div>
+                        <p class="text-sm text-gray-700 dark:text-gray-300">
+                            Showing
+                            <span class="font-medium">{{ invoices.start_index }}</span>
+                            to
+                            <span class="font-medium">{{ invoices.end_index }}</span>
+                            of
+                            <span class="font-medium">{{ invoices.paginator.count }}</span>
+                            results
+                        </p>
+                    </div>
+                    <div>
+                        <nav class="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                            {% if invoices.has_previous %}
+                                <a href="?{% if search_params.start_date %}start_date={{ search_params.start_date }}&{% endif %}{% if search_params.end_date %}end_date={{ search_params.end_date }}&{% endif %}{% if search_params.customer_name %}customer_name={{ search_params.customer_name }}&{% endif %}{% if search_params.invoice_no %}invoice_no={{ search_params.invoice_no }}&{% endif %}page={{ invoices.previous_page_number }}" 
+                                   class="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <span class="sr-only">Previous</span>
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% endif %}
+                            
+                            {% for num in invoices.paginator.page_range %}
+                                {% if num == invoices.number %}
+                                    <span class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-indigo-50 dark:bg-indigo-900 text-sm font-medium text-indigo-600 dark:text-indigo-200">
+                                        {{ num }}
+                                    </span>
+                                {% elif num > invoices.number|add:'-3' and num < invoices.number|add:'3' %}
+                                    <a href="?{% if search_params.start_date %}start_date={{ search_params.start_date }}&{% endif %}{% if search_params.end_date %}end_date={{ search_params.end_date }}&{% endif %}{% if search_params.customer_name %}customer_name={{ search_params.customer_name }}&{% endif %}{% if search_params.invoice_no %}invoice_no={{ search_params.invoice_no }}&{% endif %}page={{ num }}" 
+                                       class="relative inline-flex items-center px-4 py-2 border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                        {{ num }}
+                                    </a>
+                                {% endif %}
+                            {% endfor %}
+                            
+                            {% if invoices.has_next %}
+                                <a href="?{% if search_params.start_date %}start_date={{ search_params.start_date }}&{% endif %}{% if search_params.end_date %}end_date={{ search_params.end_date }}&{% endif %}{% if search_params.customer_name %}customer_name={{ search_params.customer_name }}&{% endif %}{% if search_params.invoice_no %}invoice_no={{ search_params.invoice_no }}&{% endif %}page={{ invoices.next_page_number }}" 
+                                   class="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-sm font-medium text-gray-500 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700">
+                                    <span class="sr-only">Next</span>
+                                    <svg class="h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                        <path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" />
+                                    </svg>
+                                </a>
+                            {% endif %}
+                        </nav>
+                    </div>
+                </div>
+            </nav>
+        </div>
+        {% endif %}
     </div>
 </div>
 
 <script>
 // Invoice row click handling
 document.addEventListener('DOMContentLoaded', function() {
+    // CSV Import Button Event Listener
+    const importButton = document.getElementById('importButton');
+    if (importButton) {
+        importButton.addEventListener('click', function() {
+            console.log('Import button clicked'); // Debug log
+            toggleImportModal();
+        });
+    }
+    
     // Invoice row click handling
     document.querySelectorAll('.invoice-row').forEach(function(row) {
         row.addEventListener('click', function(e) {
@@ -425,5 +515,138 @@ document.addEventListener('click', function(event) {
         datePicker.classList.add('hidden');
     }
 });
+
+// CSV Import Modal functionality
+function toggleImportModal() {
+    console.log('toggleImportModal called'); // Debug log
+    const modal = document.getElementById('importModal');
+    if (modal) {
+        console.log('Modal found, current classes:', modal.className); // Debug log
+        console.log('Modal current style display:', modal.style.display); // Debug log
+        
+        if (modal.classList.contains('hidden')) {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex'; // Use flex instead of block
+            modal.style.position = 'fixed';
+            modal.style.top = '0';
+            modal.style.left = '0';
+            modal.style.width = '100%';
+            modal.style.height = '100%';
+            console.log('Modal should now be visible'); // Debug log
+        } else {
+            modal.classList.add('hidden');
+            modal.style.display = 'none'; // Force hide
+            console.log('Modal should now be hidden'); // Debug log
+        }
+        console.log('Modal classes after toggle:', modal.className); // Debug log
+        
+        // Test if modal is actually visible
+        const rect = modal.getBoundingClientRect();
+        console.log('Modal position and size:', rect);
+    } else {
+        console.error('Import modal not found!'); // Debug log
+    }
+}
+
+function closeImportModal() {
+    document.getElementById('importModal').classList.add('hidden');
+    document.getElementById('importForm').reset();
+    document.getElementById('importProgress').classList.add('hidden');
+    document.getElementById('importResults').classList.add('hidden');
+}
+
+function handleImportSubmit() {
+    const form = document.getElementById('importForm');
+    const fileInput = form.querySelector('input[type="file"]');
+    
+    if (!fileInput.files[0]) {
+        alert('Please select a CSV file to import.');
+        return false;
+    }
+    
+    // Show progress indicator
+    document.getElementById('importProgress').classList.remove('hidden');
+    document.getElementById('importResults').classList.add('hidden');
+    
+    return true; // Allow form submission
+}
 </script>
+
+<!-- CSV Import Modal -->
+<div id="importModal" class="hidden" style="display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.5); z-index: 9999;">
+    <div style="display: flex; align-items: center; justify-content: center; width: 100%; height: 100%;">
+        <!-- Modal panel -->
+        <div style="background: white; padding: 24px; border-radius: 8px; max-width: 500px; width: 90%; box-shadow: 0 10px 25px rgba(0,0,0,0.3);">
+            <div class="flex items-center justify-between mb-4">
+                <h3 class="text-lg font-medium text-gray-900" id="modal-title">
+                    Import Sales from CSV
+                </h3>
+                <button type="button" onclick="closeImportModal()" class="text-gray-400 hover:text-gray-600">
+                    <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+                    </svg>
+                </button>
+            </div>
+                
+                <form id="importForm" method="post" enctype="multipart/form-data" onsubmit="return handleImportSubmit()">
+                    {% csrf_token %}
+                    <div class="mb-4">
+                        <label for="csv_file" class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">
+                            Select CSV File
+                        </label>
+                        <input type="file" id="csv_file" name="csv_file" accept=".csv" required
+                               class="block w-full text-sm text-gray-900 dark:text-gray-300 border border-gray-300 dark:border-gray-600 rounded-lg cursor-pointer bg-gray-50 dark:bg-gray-700 focus:outline-none">
+                        <p class="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                            CSV files only. Max file size: 10MB
+                        </p>
+                    </div>
+                    
+                    <div class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+                        <h4 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Required CSV Columns:</h4>
+                        <div class="text-xs text-blue-600 dark:text-blue-300 space-y-1">
+                            <div class="grid grid-cols-2 gap-2">
+                                <div>• Date of Sale</div>
+                                <div>• Invoice No</div>
+                                <div>• User</div>
+                                <div>• Customer Name</div>
+                                <div>• CUSTOMER NO</div>
+                                <div>• Item</div>
+                                <div>• Quantity</div>
+                                <div>• Unit Price</div>
+                                <div>• total_amount</div>
+                                <div>• AMT PAID</div>
+                                <div>• BAL TO BE PAID</div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Progress indicator -->
+                    <div id="importProgress" class="hidden mb-4 p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+                        <div class="flex items-center">
+                            <div class="animate-spin rounded-full h-4 w-4 border-b-2 border-yellow-600 mr-2"></div>
+                            <span class="text-sm text-yellow-800 dark:text-yellow-200">Processing CSV file...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Results display -->
+                    <div id="importResults" class="hidden mb-4">
+                        <!-- Results will be populated by JavaScript -->
+                    </div>
+                    
+                    <div class="flex justify-end space-x-3">
+                        <button type="button" onclick="closeImportModal()" 
+                                class="px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 bg-white dark:bg-gray-700 border border-gray-300 dark:border-gray-600 rounded-md hover:bg-gray-50 dark:hover:bg-gray-600">
+                            Cancel
+                        </button>
+                        <button type="submit" 
+                                class="px-4 py-2 text-sm font-medium text-white bg-green-600 hover:bg-green-700 rounded-md">
+                            Import CSV
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
 {% endblock %}

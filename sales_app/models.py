@@ -11,16 +11,24 @@ class Invoice(models.Model):
         ('cancelled', 'Cancelled'),
     ]
     
-    invoice_no = models.CharField(max_length=20, unique=True, editable=False, null=True, blank=True)
-    customer_name = models.CharField(max_length=255, null=True, blank=True)
-    date_of_sale = models.DateField(default=timezone.now, null=True, blank=True)
-    due_date = models.DateField(null=True, blank=True)
+    invoice_no = models.CharField(max_length=20, unique=True, editable=False, null=True, blank=True, db_index=True)
+    customer_name = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    date_of_sale = models.DateField(default=timezone.now, null=True, blank=True, db_index=True)
+    due_date = models.DateField(null=True, blank=True, db_index=True)
     notes = models.TextField(blank=True, null=True)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
-    total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
+    total = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True, db_index=True)
     amount_paid = models.DecimalField(max_digits=12, decimal_places=2, default=0, null=True, blank=True)
-    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='unpaid')
+    payment_status = models.CharField(max_length=10, choices=PAYMENT_STATUS_CHOICES, default='unpaid', db_index=True)
     user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='invoices')
+    
+    class Meta:
+        ordering = ['-date_of_sale', '-id']
+        indexes = [
+            models.Index(fields=['date_of_sale', 'payment_status']),
+            models.Index(fields=['customer_name', 'date_of_sale']),
+            models.Index(fields=['user', 'date_of_sale']),
+        ]
 
     @property
     def balance(self):
@@ -63,18 +71,31 @@ class Invoice(models.Model):
 
 class AdminLog(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, null=True, blank=True)
-    action = models.CharField(max_length=255, null=True, blank=True)
-    timestamp = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+    action = models.CharField(max_length=255, null=True, blank=True, db_index=True)
+    timestamp = models.DateTimeField(auto_now_add=True, null=True, blank=True, db_index=True)
     details = models.TextField(blank=True, null=True)
+
+    class Meta:
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['user', 'timestamp']),
+        ]
 
     def __str__(self):
         return f"{self.user.username} - {self.action} at {self.timestamp}"
 
 class Product(models.Model):
-    name = models.CharField(max_length=100, null=True, blank=True)
+    name = models.CharField(max_length=100, null=True, blank=True, db_index=True)
     price = models.DecimalField(max_digits=10, decimal_places=2, null=True, blank=True)
-    stock = models.IntegerField(null=True, blank=True)
+    stock = models.IntegerField(null=True, blank=True, db_index=True)
     created_at = models.DateTimeField(auto_now_add=True, null=True, blank=True)
+
+    class Meta:
+        ordering = ['name']
+        indexes = [
+            models.Index(fields=['name', 'stock']),
+            models.Index(fields=['stock']),  # For low stock queries
+        ]
 
     def __str__(self):
         return self.name
@@ -82,11 +103,17 @@ class Product(models.Model):
 
 class Sale(models.Model):
     invoice = models.ForeignKey('Invoice', on_delete=models.CASCADE, related_name='items', null=True, blank=True)
-    item = models.CharField(max_length=255, null=True, blank=True)
+    item = models.CharField(max_length=255, null=True, blank=True, db_index=True)
     unit_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
     quantity = models.IntegerField(default=1, null=True, blank=True)
     discount = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
     total_price = models.DecimalField(max_digits=10, decimal_places=2, default=0, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-id']
+        indexes = [
+            models.Index(fields=['invoice', 'item']),
+        ]
 
     def __str__(self):
         return f"{self.item} - {self.quantity} units"

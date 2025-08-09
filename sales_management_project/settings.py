@@ -101,6 +101,34 @@ USE_I18N = True
 USE_TZ = True
 
 # =============================================================================
+# CACHE CONFIGURATION
+# =============================================================================
+
+CACHES = {
+    'default': {
+        'BACKEND': 'django.core.cache.backends.locmem.LocMemCache',
+        'LOCATION': 'unique-snowflake',
+        'TIMEOUT': 300,  # Default timeout of 5 minutes
+        'OPTIONS': {
+            'MAX_ENTRIES': 1000,
+            'CULL_FREQUENCY': 3,  # Remove 1/3 of cache when MAX_ENTRIES is reached
+        }
+    }
+}
+
+# For production, consider using Redis or Memcached:
+# CACHES = {
+#     'default': {
+#         'BACKEND': 'django.core.cache.backends.redis.RedisCache',
+#         'LOCATION': 'redis://127.0.0.1:6379/1',
+#         'TIMEOUT': 300,
+#         'OPTIONS': {
+#             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#         }
+#     }
+# }
+
+# =============================================================================
 # STATIC & MEDIA FILES
 # =============================================================================
 

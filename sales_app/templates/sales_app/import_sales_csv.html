@@ -1,0 +1,16 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% block content %}
+<div class="max-w-xl mx-auto mt-10 p-8 bg-white dark:bg-gray-900 rounded-xl shadow-lg border border-gray-200 dark:border-gray-700">
+    <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">Import Sales from CSV</h2>
+    <form method="post" enctype="multipart/form-data" class="space-y-6">
+        {% csrf_token %}
+        {{ form.as_p }}
+        <button type="submit" class="px-6 py-2 bg-green-700 hover:bg-green-800 text-white font-semibold rounded-lg shadow">Import</button>
+        <a href="{% url 'products_list' %}" class="ml-4 text-blue-600 hover:underline">Cancel</a>
+    </form>
+    <div class="mt-4 text-sm text-gray-500 dark:text-gray-400">
+        <p>CSV columns: <code>Date of Sale, Invoice No, User, Customer Name, CUSTOMER NO, Item, Quantity, Unit Price, total_amount, AMT PAID, BAL TO BE PAID</code></p>
+    </div>
+</div>
+{% endblock %}

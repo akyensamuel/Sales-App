@@ -1,5 +1,6 @@
 from django.urls import path
 from . import views
+from . import performance
 
 urlpatterns = [
     path('', views.login_view, name='sales_root'),
@@ -20,5 +21,11 @@ urlpatterns = [
     path('products/edit/<int:product_id>/', views.edit_product, name='edit_product'),
     path('products/delete/<int:product_id>/', views.delete_product, name='delete_product'),
     path('api/products/', views.product_search_api, name='product_search_api'),
-    path('test_debug/', views.test_debug, name='test_debug')
+    path('test_debug/', views.test_debug, name='test_debug'),
+    
+    # Performance monitoring endpoints
+    path('api/performance/metrics/', performance.performance_metrics, name='performance_metrics'),
+    path('api/performance/cache-status/', performance.cache_status, name='cache_status'),
+    path('api/performance/clear-cache/', performance.clear_cache, name='clear_cache'),
+    path('api/performance/warmup-cache/', performance.warmup_cache, name='warmup_cache'),
 ]

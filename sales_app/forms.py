@@ -1,6 +1,13 @@
-# sales_app/forms.py
 from django import forms
 from .models import Invoice, Sale, Product
+
+
+# Form for uploading a CSV file
+class SalesCSVImportForm(forms.Form):
+    csv_file = forms.FileField(
+        label="Select CSV file",
+        help_text="CSV file with sales data. Headers: Date of Sale,Invoice No,User,Customer Name,CUSTOMER NO,Item,Quantity,Unit Price,total_amount,AMT PAID,BAL TO BE PAID"
+    )
 
 class ProductForm(forms.ModelForm):
     class Meta:
