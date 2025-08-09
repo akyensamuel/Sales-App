@@ -44,7 +44,7 @@ class Expense(models.Model):
         ordering = ['-date', '-created_at']
     
     def __str__(self):
-        return f"{self.category.name} - ${self.amount} on {self.date}"
+        return f"{self.category.name} - ₵{self.amount} on {self.date}"
 
 class ProfitLossSnapshot(models.Model):
     """Monthly P&L snapshots for performance tracking"""

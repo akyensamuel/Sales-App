@@ -1,0 +1,470 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+{% block content %}
+<div class="max-w-5xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+    <h2 class="text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">New Cash Transaction</h2>
+    <form method="post" id="cash-sales-form">
+        {% csrf_token %}
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+            <div>
+                <label class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">Invoice No</label>
+                <input type="text" value="{{ invoice_form.instance.invoice_no|default:'(auto)' }}" readonly class="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 cursor-not-allowed" />
+            </div>
+            <div>
+                <label for="id_customer_name" class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">Customer Name</label>
+                {{ invoice_form.customer_name|add_class:'w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2' }}
+            </div>
+            <div>
+                <label for="id_customer_phone" class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">Customer Phone</label>
+                {{ invoice_form.customer_phone|add_class:'w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2' }}
+            </div>
+            <div>
+                <label for="id_date_of_sale" class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">Date of Sale</label>
+                {{ invoice_form.date_of_sale|add_class:'w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2' }}
+            </div>
+            <div>
+                <label class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">User</label>
+                <input type="text" value="{{ request.user.username }}" readonly class="w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 cursor-not-allowed" />
+            </div>
+            <div class="md:col-span-2">
+                <label for="id_notes" class="block mb-2 text-sm font-semibold text-gray-900 dark:text-white">Notes/Remarks</label>
+                {{ invoice_form.notes|add_class:'w-full rounded-lg border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2' }}
+            </div>
+        </div>
+
+        <h3 class="text-lg font-semibold mb-2 text-gray-800 dark:text-gray-200">Transaction Items</h3>
+        <div class="overflow-x-auto mb-6">
+            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                <thead class="bg-gray-50 dark:bg-gray-700">
+                    <tr>
+                        <th class="px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase w-96">Item</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Amount</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Rate</th>
+                        <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total Price</th>
+                        <th class="px-4 py-2"></th>
+                    </tr>
+                </thead>
+                <tbody id="items-table-body">
+                    {{ formset.management_form }}
+                    {% for form in formset %}
+                    <tr class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 form-row">
+                        <td class="px-6 py-2">{{ form.item|add_class:'select2-item w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1' }}</td>
+                        <td class="px-4 py-2">{{ form.amount|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 amount' }}</td>
+                        <td class="px-4 py-2">{{ form.rate|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white px-2 py-1 rate' }}</td>
+                        <td class="px-4 py-2">{{ form.total_price|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white px-2 py-1 total-price' }}</td>
+                        <td class="px-4 py-2 text-center">
+                            <button type="button" class="add-row text-green-600 hover:text-green-800"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></button>
+                            <button type="button" class="remove-row text-red-600 hover:text-red-800"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg></button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                    <!-- Hidden template row for JS cloning -->
+                    <tr id="template-row" class="bg-white dark:bg-gray-800 border-b dark:border-gray-700 form-row" style="display:none;">
+                        <td class="px-6 py-2">{{ formset.empty_form.item|add_class:'select2-item w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1' }}</td>
+                        <td class="px-4 py-2">{{ formset.empty_form.amount|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 amount' }}</td>
+                        <td class="px-4 py-2">{{ formset.empty_form.rate|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white px-2 py-1 rate' }}</td>
+                        <td class="px-4 py-2">{{ formset.empty_form.total_price|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-100 dark:bg-gray-600 text-gray-900 dark:text-white px-2 py-1 total-price' }}</td>
+                        <td class="px-4 py-2 text-center">
+                            <button type="button" class="add-row text-green-600 hover:text-green-800"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></button>
+                            <button type="button" class="remove-row text-red-600 hover:text-red-800"><svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 12H4" /></svg></button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- Cash transactions show only total, no balance field -->
+        <div class="flex flex-col md:flex-row md:items-center md:justify-end gap-4 mb-6">
+            <div class="text-lg font-semibold text-gray-900 dark:text-gray-100">TOTAL: <span id="grand-total">0.00</span></div>
+        </div>
+
+        <!-- Special Information Box -->
+        <div class="mb-6 p-4 bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 rounded-lg">
+            <h3 class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">Cash Department Pricing Rules</h3>
+            <ul class="text-sm text-yellow-700 dark:text-yellow-300 space-y-1">
+                <li>• <strong>Standard Products:</strong> Total = Rate × Amount</li>
+                <li>• <strong>SUBSCRIBER WITHDRAWAL:</strong> Rate 0.001 applies when amount ≥ 6000, otherwise rate is 0 (no charge)</li>
+                <li>• All transactions are cash payments (no balance tracking)</li>
+            </ul>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-4">
+            <button type="submit" name="save_print" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">Save and Print</button>
+            <button type="submit" name="save" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">Save</button>
+        </div>
+    </form>
+</div>
+
+<!-- Load jQuery and Select2 before custom JS -->
+<script src="{% static 'sales_app/js/jquery.min.js' %}"></script>
+<link href="{% static 'sales_app/css/select2.min.css' %}" rel="stylesheet" />
+<script src="{% static 'sales_app/js/select2.min.js' %}"></script>
+
+<!-- Custom Select2 Styling (same as regular sales entry) -->
+<style>
+/* Light Mode Select2 Styling */
+.select2-container .select2-selection--single {
+    height: 34px !important;
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    background-color: #f9fafb !important;
+    padding: 0 8px !important;
+    display: flex !important;
+    align-items: center !important;
+}
+
+.select2-container .select2-selection--single .select2-selection__rendered {
+    color: #111827 !important;
+    padding: 0 !important;
+    line-height: 32px !important;
+}
+
+.select2-container .select2-selection--single .select2-selection__arrow {
+    height: 32px !important;
+    right: 8px !important;
+}
+
+.select2-dropdown {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    background-color: #ffffff !important;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06) !important;
+}
+
+.select2-container--default .select2-results__option {
+    padding: 8px 12px !important;
+    color: #111827 !important;
+}
+
+.select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+    color: white !important;
+}
+
+.select2-container--default .select2-search--dropdown .select2-search__field {
+    border: 1px solid #d1d5db !important;
+    border-radius: 0.375rem !important;
+    padding: 8px 12px !important;
+    color: #111827 !important;
+    background-color: #f9fafb !important;
+}
+
+/* Dark Mode Select2 Styling */
+@media (prefers-color-scheme: dark) {
+    .select2-container .select2-selection--single {
+        border-color: #4b5563 !important;
+        background-color: #374151 !important;
+    }
+
+    .select2-container .select2-selection--single .select2-selection__rendered {
+        color: #ffffff !important;
+    }
+
+    .select2-dropdown {
+        border-color: #4b5563 !important;
+        background-color: #1f2937 !important;
+    }
+
+    .select2-container--default .select2-results__option {
+        color: #ffffff !important;
+    }
+
+    .select2-container--default .select2-results__option--highlighted[aria-selected] {
+        background-color: #3b82f6 !important;
+    }
+
+    .select2-container--default .select2-search--dropdown .select2-search__field {
+        border-color: #4b5563 !important;
+        background-color: #374151 !important;
+        color: #ffffff !important;
+    }
+}
+
+/* Dark class-based styling */
+.dark .select2-container .select2-selection--single {
+    border-color: #4b5563 !important;
+    background-color: #374151 !important;
+}
+
+.dark .select2-container .select2-selection--single .select2-selection__rendered {
+    color: #ffffff !important;
+}
+
+.dark .select2-dropdown {
+    border-color: #4b5563 !important;
+    background-color: #1f2937 !important;
+}
+
+.dark .select2-container--default .select2-results__option {
+    color: #ffffff !important;
+}
+
+.dark .select2-container--default .select2-results__option--highlighted[aria-selected] {
+    background-color: #3b82f6 !important;
+}
+
+.dark .select2-container--default .select2-search--dropdown .select2-search__field {
+    border-color: #4b5563 !important;
+    background-color: #374151 !important;
+    color: #ffffff !important;
+}
+
+/* Focus states */
+.select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+
+.dark .select2-container--default.select2-container--focus .select2-selection--single {
+    border-color: #3b82f6 !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1) !important;
+}
+</style>
+
+<script>
+$(document).ready(function() {
+    const STORAGE_KEY = 'cash_sales_form_data_v1';
+    
+    function updateRowTotal(row) {
+        const amountInput = row.querySelector('.amount');
+        const rateInput = row.querySelector('.rate');
+        const totalPriceInput = row.querySelector('.total-price');
+        
+        if (amountInput && rateInput && totalPriceInput) {
+            const amount = parseFloat(amountInput.value) || 0;
+            const rate = parseFloat(rateInput.value) || 0;
+            
+            // Special handling for SUBSCRIBER WITHDRAWAL
+            const itemSelect = row.querySelector('select[name*="item"]');
+            if (itemSelect) {
+                const selectedOption = $(itemSelect).select2('data')[0];
+                if (selectedOption && selectedOption.text === 'SUBSCRIBER WITHDRAWAL') {
+                    if (amount >= 6000) {
+                        rateInput.value = '0.001';
+                        totalPriceInput.value = (amount * 0.001).toFixed(2);
+                    } else {
+                        rateInput.value = '0';
+                        totalPriceInput.value = '0.00';
+                    }
+                    return;
+                }
+            }
+            
+            totalPriceInput.value = (amount * rate).toFixed(2);
+        }
+    }
+    
+    function updateTotals() {
+        // Update all row totals first
+        document.querySelectorAll('#items-table-body tr:not(#template-row)').forEach(function(row) {
+            updateRowTotal(row);
+        });
+        
+        // Calculate grand total
+        let grandTotal = 0;
+        document.querySelectorAll('.total-price').forEach(function(input) {
+            let val = parseFloat(input.value) || 0;
+            grandTotal += val;
+        });
+        document.getElementById('grand-total').textContent = grandTotal.toFixed(2);
+    }
+    
+    function bindRowInputs(row) {
+        // Bind input event listeners
+        row.querySelectorAll('.amount, .rate').forEach(function(input) {
+            input.addEventListener('input', function() {
+                updateRowTotal(row);
+                updateTotals();
+                saveFormToStorage();
+            });
+        });
+        
+        // Handle item select
+        const itemInput = row.querySelector('select[name*="item"]');
+        if (itemInput) {
+            itemInput.addEventListener('change', function() {
+                updateRowTotal(row);
+                updateTotals();
+                saveFormToStorage();
+            });
+
+            // Initialize Select2 for cash products
+            $(itemInput).select2({
+                ajax: {
+                    url: '/sales/cash/api/products/',
+                    dataType: 'json',
+                    delay: 250,
+                    data: function(params) {
+                        return { q: params.term };
+                    },
+                    processResults: function(data) {
+                        return {
+                            results: data.map(function(item) {
+                                return { 
+                                    id: item.id, 
+                                    text: item.name,
+                                    rate: item.rate
+                                };
+                            })
+                        };
+                    },
+                    cache: true
+                },
+                minimumInputLength: 1,
+                placeholder: 'Search product...',
+                allowClear: true,
+                width: '100%',
+                dropdownParent: $(itemInput).closest('td'),
+                theme: 'default'
+            });
+
+            // Handle Select2 selection for cash products
+            $(itemInput).on('select2:select', function(e) {
+                var data = e.params.data;
+                var rowElement = itemInput.closest('tr');
+                
+                if (!rowElement) return;
+                
+                var rateInput = rowElement.querySelector('.rate');
+                
+                if (rateInput && data.rate !== undefined && data.rate !== null) {
+                    rateInput.value = data.rate;
+                    
+                    // Trigger input events
+                    var inputEvent = new Event('input', { bubbles: true, cancelable: true });
+                    rateInput.dispatchEvent(inputEvent);
+                    
+                    updateRowTotal(rowElement);
+                    updateTotals();
+                }
+            });
+        }
+    }
+
+    function saveFormToStorage() {
+        const rows = [];
+        document.querySelectorAll('#items-table-body tr:not(#template-row)').forEach(function(row) {
+            const item = row.querySelector('input[name*="item"]')?.value || '';
+            const amount = row.querySelector('.amount')?.value || '';
+            const rate = row.querySelector('.rate')?.value || '';
+            const totalPrice = row.querySelector('.total-price')?.value || '';
+            rows.push({ item, amount, rate, totalPrice });
+        });
+        
+        const invoiceFields = {
+            customer_name: document.getElementById('id_customer_name')?.value || '',
+            customer_phone: document.getElementById('id_customer_phone')?.value || '',
+            date_of_sale: document.getElementById('id_date_of_sale')?.value || '',
+            notes: document.getElementById('id_notes')?.value || ''
+        };
+        
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ rows, invoiceFields }));
+    }
+
+    function restoreFormFromStorage() {
+        const data = localStorage.getItem(STORAGE_KEY);
+        if (!data) return;
+        
+        try {
+            const parsed = JSON.parse(data);
+            if (parsed.invoiceFields) {
+                // Restore invoice fields
+                if (parsed.invoiceFields.customer_name) {
+                    const customerNameField = document.getElementById('id_customer_name');
+                    if (customerNameField) customerNameField.value = parsed.invoiceFields.customer_name;
+                }
+                if (parsed.invoiceFields.customer_phone) {
+                    const phoneField = document.getElementById('id_customer_phone');
+                    if (phoneField) phoneField.value = parsed.invoiceFields.customer_phone;
+                }
+                if (parsed.invoiceFields.date_of_sale) {
+                    const dateField = document.getElementById('id_date_of_sale');
+                    if (dateField) dateField.value = parsed.invoiceFields.date_of_sale;
+                }
+                if (parsed.invoiceFields.notes) {
+                    const notesField = document.getElementById('id_notes');
+                    if (notesField) notesField.value = parsed.invoiceFields.notes;
+                }
+            }
+        } catch (e) {
+            console.log('Failed to restore form data:', e);
+        }
+    }
+
+    // Initialize existing rows
+    document.querySelectorAll('#items-table-body tr:not(#template-row)').forEach(bindRowInputs);
+    
+    // Add row functionality
+    $(document).on('click', '.add-row', function() {
+        console.log('Add row button clicked');
+        
+        const templateRow = document.getElementById('template-row');
+        if (!templateRow) {
+            console.error('Template row not found');
+            return;
+        }
+        console.log('Template row found:', templateRow);
+        
+        const newRow = templateRow.cloneNode(true);
+        newRow.id = '';
+        newRow.style.display = '';
+        
+        // Update form indices - check for different possible IDs
+        let totalForms = document.getElementById('id_form-TOTAL_FORMS') || 
+                        document.querySelector('input[name="form-TOTAL_FORMS"]') ||
+                        document.querySelector('[name*="TOTAL_FORMS"]');
+        
+        if (!totalForms) {
+            console.error('Total forms input not found. Available form inputs:', 
+                document.querySelectorAll('input[type="hidden"]'));
+            // Create the management form fields if they don't exist
+            const managementFormHTML = `
+                <input type="hidden" name="form-TOTAL_FORMS" value="1" id="id_form-TOTAL_FORMS">
+                <input type="hidden" name="form-INITIAL_FORMS" value="0" id="id_form-INITIAL_FORMS">
+                <input type="hidden" name="form-MIN_NUM_FORMS" value="0" id="id_form-MIN_NUM_FORMS">
+                <input type="hidden" name="form-MAX_NUM_FORMS" value="1000" id="id_form-MAX_NUM_FORMS">
+            `;
+            document.querySelector('#cash-sales-form').insertAdjacentHTML('afterbegin', managementFormHTML);
+            totalForms = document.getElementById('id_form-TOTAL_FORMS');
+        }
+        
+        const formIdx = parseInt(totalForms.value || '0');
+        console.log('Current form index:', formIdx);
+        
+        newRow.innerHTML = newRow.innerHTML.replace(/__prefix__/g, formIdx);
+        templateRow.parentNode.insertBefore(newRow, templateRow);
+        
+        totalForms.value = formIdx + 1;
+        console.log('New form index:', totalForms.value);
+        
+        bindRowInputs(newRow);
+        updateTotals();
+    });
+
+    // Remove row functionality
+    $(document).on('click', '.remove-row', function() {
+        const rows = document.querySelectorAll('#items-table-body tr:not(#template-row)');
+        if (rows.length > 1) {
+            $(this).closest('tr').remove();
+            updateTotals();
+            saveFormToStorage();
+        }
+    });
+
+    // Form submission handler
+    document.getElementById('cash-sales-form').addEventListener('submit', function() {
+        localStorage.removeItem(STORAGE_KEY);
+    });
+
+    // Auto-save functionality
+    setInterval(saveFormToStorage, 5000);
+    
+    // Restore form data on page load
+    restoreFormFromStorage();
+    
+    // Initial calculation
+    updateTotals();
+});
+</script>
+{% endblock %}

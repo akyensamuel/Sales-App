@@ -23,6 +23,14 @@ urlpatterns = [
     path('api/products/', views.product_search_api, name='product_search_api'),
     path('test_debug/', views.test_debug, name='test_debug'),
     
+    # Cash Department URLs
+    path('cash/products/', views.cash_products, name='cash_products'),
+    path('cash/products/delete/<int:product_id>/', views.delete_cash_product, name='delete_cash_product'),
+    path('cash/api/products/', views.cash_product_search_api, name='cash_product_search_api'),
+    path('cash/sales_entry/', views.cash_sales_entry, name='cash_sales_entry'),
+    path('cash/receipt_print/<int:invoice_id>/', views.cash_receipt_detail, name='cash_receipt_print'),
+    path('cash/edit_invoice/<int:invoice_id>/', views.edit_cash_invoice, name='edit_cash_invoice'),
+    
     # Performance monitoring endpoints
     path('api/performance/metrics/', performance.performance_metrics, name='performance_metrics'),
     path('api/performance/cache-status/', performance.cache_status, name='cache_status'),

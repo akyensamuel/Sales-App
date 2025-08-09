@@ -55,16 +55,16 @@
                     {% for item in items %}
                     <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                         <td class="px-4 py-3 text-gray-900 dark:text-gray-100 font-medium">{{ item.item }}</td>
-                        <td class="px-4 py-3 text-right text-gray-900 dark:text-gray-100">${{ item.unit_price|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-right text-gray-900 dark:text-gray-100">₵{{ item.unit_price|floatformat:2 }}</td>
                         <td class="px-4 py-3 text-center text-gray-900 dark:text-gray-100">{{ item.quantity }}</td>
                         <td class="px-4 py-3 text-right text-gray-900 dark:text-gray-100">
                             {% if item.discount and item.discount > 0 %}
-                                <span class="text-red-600 dark:text-red-400">-${{ item.discount|floatformat:2 }}</span>
+                                <span class="text-red-600 dark:text-red-400">-₵{{ item.discount|floatformat:2 }}</span>
                             {% else %}
-                                <span class="text-gray-400">$0.00</span>
+                                <span class="text-gray-400">₵0.00</span>
                             {% endif %}
                         </td>
-                        <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">${{ item.total_price|floatformat:2 }}</td>
+                        <td class="px-4 py-3 text-right font-semibold text-gray-900 dark:text-gray-100">₵{{ item.total_price|floatformat:2 }}</td>
                     </tr>
                     {% empty %}
                     <tr>
@@ -82,20 +82,20 @@
             <!-- Total -->
             <div class="text-center md:text-left">
                 <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Invoice Total</div>
-                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">${{ invoice.total|floatformat:2 }}</div>
+                <div class="text-2xl font-bold text-gray-900 dark:text-gray-100">₵{{ invoice.total|floatformat:2 }}</div>
             </div>
             
             <!-- Amount Paid -->
             <div class="text-center">
                 <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Amount Paid</div>
-                <div class="text-2xl font-bold text-green-600 dark:text-green-400">${{ invoice.amount_paid|floatformat:2 }}</div>
+                <div class="text-2xl font-bold text-green-600 dark:text-green-400">₵{{ invoice.amount_paid|floatformat:2 }}</div>
             </div>
             
             <!-- Balance -->
             <div class="text-center md:text-right">
                 <div class="text-sm font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-1">Balance Due</div>
                 <div class="text-2xl font-bold {% if invoice.balance > 0 %}text-red-600 dark:text-red-400{% elif invoice.balance == 0 %}text-green-600 dark:text-green-400{% else %}text-blue-600 dark:text-blue-400{% endif %}">
-                    ${{ invoice.balance|floatformat:2 }}
+                    ₵{{ invoice.balance|floatformat:2 }}
                 </div>
                 {% if invoice.balance > 0 %}
                     <div class="text-xs text-red-500 dark:text-red-400 mt-1">Outstanding</div>

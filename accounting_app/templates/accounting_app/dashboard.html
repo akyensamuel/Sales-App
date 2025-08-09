@@ -11,7 +11,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400">Monthly Revenue</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400">${{ monthly_revenue|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400">₵{{ monthly_revenue|floatformat:2 }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_month }}</p>
                 </div>
                 <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full group-hover:bg-green-200 dark:group-hover:bg-green-800">
@@ -25,7 +25,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400">Monthly Expenses</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400">${{ monthly_expenses|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400">₵{{ monthly_expenses|floatformat:2 }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_month }}</p>
                 </div>
                 <div class="p-3 bg-red-100 dark:bg-red-900 rounded-full group-hover:bg-red-200 dark:group-hover:bg-red-800">
@@ -40,7 +40,7 @@
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400 {% if net_profit >= 0 %}group-hover:text-blue-600 dark:group-hover:text-blue-400{% else %}group-hover:text-orange-600 dark:group-hover:text-orange-400{% endif %}">Net Profit</p>
                     <p class="text-2xl font-bold {% if net_profit >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-orange-600 dark:text-orange-400{% endif %}">
-                        ${{ net_profit|floatformat:2 }}
+                        ₵{{ net_profit|floatformat:2 }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Margin: {{ profit_margin|floatformat:1 }}%</p>
                 </div>
@@ -55,7 +55,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400">Outstanding</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400">${{ outstanding_amount|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400">₵{{ outstanding_amount|floatformat:2 }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ outstanding_count }} invoice{{ outstanding_count|pluralize }}</p>
                 </div>
                 <div class="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800">

@@ -555,11 +555,14 @@ def process_csv_import(csv_file):
 @login_required
 @user_passes_test(is_manager)
 def manager_dashboard(request):
-    """Manager dashboard with search functionality and CSV import"""
+    """Manager dashboard with search functionality and CSV import for both regular and cash departments"""
     # Handle CSV import
     import_result = None
     import_errors = None
     csv_form = SalesCSVImportForm()
+    
+    # Get department filter
+    department = request.GET.get('department', 'regular')  # 'regular' or 'cash'
     
     if request.method == 'POST':
         if 'csv_file' in request.FILES:
@@ -577,7 +580,7 @@ def manager_dashboard(request):
                         messages.warning(request, f'And {len(import_errors) - 5} more errors...')
         
         elif 'delete_invoice_id' in request.POST:
-            # Handle invoice deletion with stock restoration
+            # Handle regular invoice deletion with stock restoration
             invoice_id = request.POST.get('delete_invoice_id')
             print(f"DEBUG: Delete request received for invoice ID: {invoice_id}")
             print(f"DEBUG: POST data: {dict(request.POST)}")
@@ -644,10 +647,37 @@ def manager_dashboard(request):
                 messages.error(request, f'Error deleting invoice: {str(e)}')
             
             return redirect('manager_dashboard')
+            
+        elif 'delete_cash_invoice_id' in request.POST:
+            # Handle cash invoice deletion (no stock restoration needed)
+            cash_invoice_id = request.POST.get('delete_cash_invoice_id')
+            print(f"DEBUG: Delete request received for cash invoice ID: {cash_invoice_id}")
+            
+            try:
+                cash_invoice = CashInvoice.objects.get(id=cash_invoice_id)
+                invoice_no = cash_invoice.invoice_no
+                customer_name = cash_invoice.customer_name
+                
+                # Log the deletion
+                AdminLog.objects.create(
+                    user=request.user,
+                    action='Deleted Cash Invoice',
+                    details=f'Cash Invoice ID: {cash_invoice_id}, Customer: {customer_name}'
+                )
+                
+                cash_invoice.delete()
+                messages.success(request, f'Cash Invoice {invoice_no} deleted successfully.')
+                
+            except CashInvoice.DoesNotExist:
+                messages.error(request, 'Cash Invoice not found.')
+            except Exception as e:
+                messages.error(request, f'Error deleting cash invoice: {str(e)}')
+            
+            from django.http import HttpResponseRedirect
+            from django.urls import reverse
+            return HttpResponseRedirect(reverse('manager_dashboard') + '?department=cash')
     
-    # Handle search and filtering with optimized queries
-    invoices_query = Invoice.objects.select_related('user').prefetch_related('items')
-    
+    # Handle search and filtering parameters
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     customer_name = request.GET.get('customer_name', '').strip()
@@ -656,35 +686,74 @@ def manager_dashboard(request):
     
     has_search_params = any([start_date, end_date, customer_name, customer_phone, invoice_no])
     
-    if has_search_params:
-        search_conditions = Q()
+    # Handle different departments
+    if department == 'cash':
+        # Cash department - query CashInvoice model
+        invoices_query = CashInvoice.objects.prefetch_related('items')
         
-        # Date range search
-        if start_date and end_date:
-            search_conditions |= Q(date_of_sale__gte=start_date, date_of_sale__lte=end_date)
-        elif start_date:
-            search_conditions |= Q(date_of_sale__gte=start_date)
-        elif end_date:
-            search_conditions |= Q(date_of_sale__lte=end_date)
-        
-        # Customer name search
-        if customer_name:
-            search_conditions |= Q(customer_name__icontains=customer_name)
-        
-        # Customer phone search
-        if customer_phone:
-            search_conditions |= Q(customer_phone__icontains=customer_phone)
-        
-        # Invoice number search
-        if invoice_no:
-            search_conditions |= Q(invoice_no__icontains=invoice_no)
-        
-        if search_conditions:
-            invoices = invoices_query.filter(search_conditions).order_by('-date_of_sale')
+        if has_search_params:
+            search_conditions = Q()
+            
+            # Date range search
+            if start_date and end_date:
+                search_conditions |= Q(date_of_sale__gte=start_date, date_of_sale__lte=end_date)
+            elif start_date:
+                search_conditions |= Q(date_of_sale__gte=start_date)
+            elif end_date:
+                search_conditions |= Q(date_of_sale__lte=end_date)
+            
+            # Customer name search
+            if customer_name:
+                search_conditions |= Q(customer_name__icontains=customer_name)
+            
+            # Customer phone search
+            if customer_phone:
+                search_conditions |= Q(customer_phone__icontains=customer_phone)
+            
+            # Invoice number search
+            if invoice_no:
+                search_conditions |= Q(invoice_no__icontains=invoice_no)
+            
+            if search_conditions:
+                invoices = invoices_query.filter(search_conditions).order_by('-date_of_sale')
+        else:
+            # Default: show today's cash invoices
+            today = timezone.now().date()
+            invoices = invoices_query.filter(date_of_sale=today).order_by('-date_of_sale')
+    
     else:
-        # Default: show today's invoices
-        today = timezone.now().date()
-        invoices = invoices_query.filter(date_of_sale=today).order_by('-date_of_sale')
+        # Regular department - query Invoice model
+        invoices_query = Invoice.objects.select_related('user').prefetch_related('items')
+        
+        if has_search_params:
+            search_conditions = Q()
+            
+            # Date range search
+            if start_date and end_date:
+                search_conditions |= Q(date_of_sale__gte=start_date, date_of_sale__lte=end_date)
+            elif start_date:
+                search_conditions |= Q(date_of_sale__gte=start_date)
+            elif end_date:
+                search_conditions |= Q(date_of_sale__lte=end_date)
+            
+            # Customer name search
+            if customer_name:
+                search_conditions |= Q(customer_name__icontains=customer_name)
+            
+            # Customer phone search
+            if customer_phone:
+                search_conditions |= Q(customer_phone__icontains=customer_phone)
+            
+            # Invoice number search
+            if invoice_no:
+                search_conditions |= Q(invoice_no__icontains=invoice_no)
+            
+            if search_conditions:
+                invoices = invoices_query.filter(search_conditions).order_by('-date_of_sale')
+        else:
+            # Default: show today's invoices
+            today = timezone.now().date()
+            invoices = invoices_query.filter(date_of_sale=today).order_by('-date_of_sale')
 
     # Use pagination for large datasets
     from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -705,6 +774,7 @@ def manager_dashboard(request):
     context = {
         'invoices': invoices_page,
         'total_sales': total_sales,
+        'department': department,
         'search_params': {
             'start_date': start_date,
             'end_date': end_date,
@@ -910,3 +980,264 @@ def test_debug(request):
     print("=== TEST DEBUG VIEW CALLED ===")
     print("This should appear in terminal")
     return HttpResponse("Debug test")
+
+
+# === CASH DEPARTMENT VIEWS ===
+
+from .models import CashProduct, CashInvoice, CashSale
+from .forms import CashProductForm, CashInvoiceForm, CashSaleForm
+
+@login_required
+@user_passes_test(is_manager)
+def cash_products(request):
+    """Manage cash department products with rate-based pricing"""
+    if request.method == 'POST':
+        product_id = request.POST.get('product_id')
+        
+        if product_id:
+            # Edit existing product
+            product = get_object_or_404(CashProduct, id=product_id)
+            form = CashProductForm(request.POST, instance=product)
+        else:
+            # Add new product
+            form = CashProductForm(request.POST)
+        
+        if form.is_valid():
+            product = form.save()
+            action = 'updated' if product_id else 'added'
+            messages.success(request, f'Product "{product.name}" {action} successfully!')
+            
+            # Log the action
+            AdminLog.objects.create(
+                user=request.user,
+                action=f'Cash Product {action.title()}',
+                details=f'Product: {product.name}, Rate: {product.rate}'
+            )
+        else:
+            for field, errors in form.errors.items():
+                for error in errors:
+                    messages.error(request, f'{field}: {error}')
+        
+        return redirect('cash_products')
+    
+    # GET request - display products
+    products = CashProduct.objects.all().order_by('name')
+    
+    context = {
+        'products': products,
+    }
+    
+    return render(request, 'sales_app/cash_products.html', context)
+
+
+@login_required
+@user_passes_test(is_manager)
+def delete_cash_product(request, product_id):
+    """Delete a cash product"""
+    if request.method == 'POST':
+        try:
+            product = get_object_or_404(CashProduct, id=product_id)
+            product_name = product.name
+            product.delete()
+            
+            messages.success(request, f'Product "{product_name}" deleted successfully!')
+            
+            # Log the deletion
+            AdminLog.objects.create(
+                user=request.user,
+                action='Cash Product Deleted',
+                details=f'Product: {product_name}'
+            )
+        except Exception as e:
+            messages.error(request, f'Error deleting product: {str(e)}')
+    
+    return redirect('cash_products')
+
+
+def cash_product_search_api(request):
+    """
+    API endpoint for Select2 cash product search.
+    Returns JSON list of matching cash products with id, name, and rate.
+    """
+    if request.method == 'GET':
+        query = request.GET.get('q', '').strip()
+        products = CashProduct.objects.filter(name__icontains=query)[:20] if query else CashProduct.objects.none()
+        
+        data = [
+            {
+                'id': product.id,
+                'text': product.name,
+                'name': product.name,
+                'rate': str(product.rate)
+            }
+            for product in products
+        ]
+        return JsonResponse(data, safe=False)
+    
+    return JsonResponse([], safe=False)
+
+
+@login_required
+def cash_sales_entry(request):
+    """Handle cash department sales entry with rate-based pricing"""
+    from django.forms import inlineformset_factory
+    
+    CashSaleFormSet = inlineformset_factory(CashInvoice, CashSale, form=CashSaleForm, extra=1, can_delete=True)
+    
+    if request.method == 'POST':
+        try:
+            invoice_form = CashInvoiceForm(request.POST)
+            formset = CashSaleFormSet(request.POST)
+            
+            print(f"DEBUG: Processing cash sales entry for user {request.user}")
+            print(f"DEBUG: Formset total forms: {request.POST.get('form-TOTAL_FORMS', 'NOT_FOUND')}")
+            
+            if invoice_form.is_valid() and formset.is_valid():
+                formset_data = [form.cleaned_data for form in formset if form.cleaned_data and not form.cleaned_data.get('DELETE', False)]
+                print(f"DEBUG: Processing {len(formset_data)} cash sale items")
+                
+                if not formset_data:
+                    messages.error(request, 'No valid items found. Please add at least one item to the transaction.')
+                    print("DEBUG: No valid items found in formset")
+                else:
+                    try:
+                        with transaction.atomic():
+                            # Create cash invoice
+                            invoice = invoice_form.save(commit=False)
+                            invoice.user = request.user
+                            invoice.payment_status = 'paid'  # Cash transactions are always paid
+                            invoice.save()
+                            print(f"DEBUG: Cash invoice created with ID {invoice.id}")
+                            
+                            # Save the formset
+                            formset.instance = invoice
+                            saved_items = formset.save()
+                            print(f"DEBUG: Saved {len(saved_items)} cash sale items")
+                            
+                            # Calculate total from saved items
+                            total_amount = sum(item.total_price for item in invoice.items.all())
+                            invoice.total = total_amount
+                            invoice.save()
+                            print(f"DEBUG: Cash invoice total calculated: {total_amount}")
+                            
+                            messages.success(request, f'Cash Transaction {invoice.invoice_no} saved successfully!')
+                            
+                            if 'save_print' in request.POST:
+                                print(f"DEBUG: Rendering cash receipt for invoice {invoice.invoice_no}")
+                                return render(request, 'sales_app/cash_receipt_print.html', {
+                                    'invoice': invoice,
+                                    'items': invoice.items.all(),
+                                })
+                            
+                            print(f"DEBUG: Redirecting to cash sales entry after successful save")
+                            return redirect('cash_sales_entry')
+                            
+                    except Exception as save_error:
+                        print(f"ERROR: Cash transaction save failed: {str(save_error)}")
+                        messages.error(request, f'Error saving cash transaction: {str(save_error)}')
+                        import traceback
+                        traceback.print_exc()
+            else:
+                # Form validation failed
+                print("DEBUG: Cash form validation failed")
+                if not invoice_form.is_valid():
+                    print(f"DEBUG: Cash invoice form errors: {invoice_form.errors}")
+                    for field, errors in invoice_form.errors.items():
+                        for error in errors:
+                            messages.error(request, f"Invoice {field}: {error}")
+                            
+                if not formset.is_valid():
+                    print(f"DEBUG: Cash formset errors: {formset.errors}")
+                    for i, form in enumerate(formset.forms):
+                        if form.errors:
+                            print(f"DEBUG: Cash form {i} errors: {form.errors}")
+                            for field, errors in form.errors.items():
+                                for error in errors:
+                                    messages.error(request, f"Item {i+1} - {field}: {error}")
+                        
+        except Exception as general_error:
+            print(f"CRITICAL ERROR in cash_sales_entry: {str(general_error)}")
+            import traceback
+            traceback.print_exc()
+            messages.error(request, f'Unexpected error occurred. Please try again. Error: {str(general_error)}')
+    else:
+        invoice_form = CashInvoiceForm()
+        formset = CashSaleFormSet()
+    
+    return render(request, 'sales_app/cash_sales_entry.html', {
+        'invoice_form': invoice_form,
+        'formset': formset
+    })
+
+
+@login_required
+@user_passes_test(is_manager)
+def cash_receipt_detail(request, invoice_id):
+    """Display cash invoice receipt for viewing/printing"""
+    cash_invoice = get_object_or_404(CashInvoice, id=invoice_id)
+    cash_items = cash_invoice.items.exclude(item__isnull=True).exclude(item__exact="")
+    
+    return render(request, 'sales_app/cash_receipt_print.html', {
+        'invoice': cash_invoice,
+        'items': cash_items
+    })
+
+
+@login_required
+@user_passes_test(is_manager)
+def edit_cash_invoice(request, invoice_id):
+    """Edit an existing cash invoice"""
+    from django.forms import inlineformset_factory
+    
+    cash_invoice = get_object_or_404(CashInvoice, id=invoice_id)
+    CashSaleFormSet = inlineformset_factory(CashInvoice, CashSale, form=CashSaleForm, extra=0, can_delete=True)
+    
+    if request.method == 'POST':
+        form = CashInvoiceForm(request.POST, instance=cash_invoice)
+        formset = CashSaleFormSet(request.POST, instance=cash_invoice)
+        
+        if form.is_valid() and formset.is_valid():
+            try:
+                with transaction.atomic():
+                    # Save updated cash invoice and formset
+                    cash_invoice = form.save(commit=False)
+                    cash_invoice.save()
+                    formset.save()
+                    
+                    # Recalculate total from all items
+                    items_total = sum(item.total_price or 0 for item in cash_invoice.items.all())
+                    cash_invoice.total = items_total
+                    cash_invoice.save()
+                    
+                    messages.success(request, f'Cash Invoice {cash_invoice.invoice_no} updated successfully!')
+                    from django.http import HttpResponseRedirect
+                    from django.urls import reverse
+                    return HttpResponseRedirect(reverse('manager_dashboard') + '?department=cash')
+                    
+            except Exception as e:
+                messages.error(request, f'Error updating cash invoice: {str(e)}')
+        else:
+            # Form validation failed
+            if not form.is_valid():
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        messages.error(request, f"Invoice {field}: {error}")
+                        
+            if not formset.is_valid():
+                for i, form_errors in enumerate(formset.errors):
+                    if form_errors:
+                        for field, errors in form_errors.items():
+                            for error in errors:
+                                messages.error(request, f"Item {i+1} - {field}: {error}")
+                
+                for error in formset.non_form_errors():
+                    messages.error(request, f"Form error: {error}")
+    else:
+        form = CashInvoiceForm(instance=cash_invoice)
+        formset = CashSaleFormSet(instance=cash_invoice)
+        
+    return render(request, 'sales_app/edit_cash_invoice.html', {
+        'form': form,
+        'formset': formset,
+        'cash_invoice': cash_invoice
+    })

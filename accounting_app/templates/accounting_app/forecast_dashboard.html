@@ -14,7 +14,7 @@
             {% for forecast in forecasts %}
             <tr>
                 <td>{{ forecast.job_type }}</td>
-                <td>${{ forecast.projected_revenue }}</td>
+                <td>₵{{ forecast.projected_revenue }}</td>
                 <td>{{ forecast.forecast_date }}</td>
             </tr>
             {% endfor %}

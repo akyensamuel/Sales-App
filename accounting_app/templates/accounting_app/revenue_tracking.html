@@ -86,7 +86,7 @@ function initRevenueChart() {
                         beginAtZero: true,
                         ticks: {
                             callback: function(value) {
-                                return '$' + value.toLocaleString();
+                                return '₵' + value.toLocaleString();
                             }
                         }
                     },
@@ -188,7 +188,7 @@ window.addEventListener('beforeunload', function() {
                                     {% else %}
                                         text-gray-500 dark:text-gray-400
                                     {% endif %}">
-                                    ${{ month.revenue|floatformat:2 }}
+                                    ₵{{ month.revenue|floatformat:2 }}
                                 </span>
                             </div>
                         {% endfor %}
@@ -201,7 +201,7 @@ window.addEventListener('beforeunload', function() {
                                 </span>
                             </div>
                             <span class="font-bold text-xl text-blue-600 dark:text-blue-400">
-                                ${{ total_12_month_revenue|floatformat:2 }}
+                                ₵{{ total_12_month_revenue|floatformat:2 }}
                             </span>
                         </div>
                     </div>
@@ -235,7 +235,7 @@ window.addEventListener('beforeunload', function() {
                             {% elif status.payment_status == 'partial' %}text-orange-600
                             {% elif status.payment_status == 'overdue' %}text-red-600
                             {% else %}text-gray-600{% endif %}">
-                            ${{ status.total|floatformat:2 }}
+                            ₵{{ status.total|floatformat:2 }}
                         </p>
                         <p class="text-sm text-gray-500">{{ status.count }} invoice{{ status.count|pluralize }}</p>
                     </div>
@@ -304,7 +304,7 @@ window.addEventListener('beforeunload', function() {
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
                                         <div>
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">${{ invoice.total|floatformat:2 }}</div>
+                                            <div class="text-sm font-medium text-gray-900 dark:text-white">₵{{ invoice.total|floatformat:2 }}</div>
                                             <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium
                                                 {% if invoice.payment_status == 'unpaid' %}bg-yellow-100 text-yellow-800
                                                 {% elif invoice.payment_status == 'partial' %}bg-orange-100 text-orange-800
@@ -315,9 +315,9 @@ window.addEventListener('beforeunload', function() {
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
-                                        <div class="text-sm font-bold text-red-600 dark:text-red-400">${{ invoice.balance|floatformat:2 }}</div>
+                                        <div class="text-sm font-bold text-red-600 dark:text-red-400">₵{{ invoice.balance|floatformat:2 }}</div>
                                         <div class="text-xs text-gray-500 dark:text-gray-400">
-                                            Paid: ${{ invoice.amount_paid|floatformat:2 }}
+                                            Paid: ₵{{ invoice.amount_paid|floatformat:2 }}
                                         </div>
                                     </td>
                                     <td class="px-6 py-4 whitespace-nowrap">
@@ -367,7 +367,7 @@ window.addEventListener('beforeunload', function() {
                             <div>
                                 <p class="text-sm font-medium text-yellow-800 dark:text-yellow-300">Total Outstanding</p>
                                 <p class="text-lg font-bold text-yellow-900 dark:text-yellow-200">
-                                    ${{ outstanding_invoices|total_outstanding|floatformat:2 }}
+                                    ₵{{ outstanding_invoices|total_outstanding|floatformat:2 }}
                                 </p>
                             </div>
                         </div>

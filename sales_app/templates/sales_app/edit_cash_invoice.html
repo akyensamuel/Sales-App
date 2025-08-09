@@ -1,0 +1,340 @@
+{% extends "core/base.html" %}
+{% load static %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+    <div class="border-b border-gray-200 dark:border-gray-700 pb-6 mb-6">
+        <div class="flex justify-between items-center">
+            <div>
+                <h2 class="text-3xl font-bold text-gray-900 dark:text-gray-100">Edit Cash Invoice</h2>
+                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
+                    Invoice: {{ cash_invoice.invoice_no }}
+                </p>
+            </div>
+            <div class="flex space-x-4">
+                <a href="{% url 'manager_dashboard' %}?department=cash" 
+                   class="inline-flex items-center px-4 py-2 bg-gray-600 hover:bg-gray-700 text-white font-medium rounded-lg text-sm transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M10 19l-7-7m0 0l7-7m-7 7h18"/>
+                    </svg>
+                    Back to Dashboard
+                </a>
+                <a href="{% url 'cash_receipt_print' cash_invoice.id %}" 
+                   class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                    </svg>
+                    View Receipt
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <form method="post" id="cashInvoiceForm" class="space-y-8">
+        {% csrf_token %}
+        
+        <!-- Invoice Information -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Invoice Information</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <label for="{{ form.customer_name.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Customer Name
+                    </label>
+                    {{ form.customer_name }}
+                </div>
+                <div>
+                    <label for="{{ form.customer_phone.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Customer Phone
+                    </label>
+                    {{ form.customer_phone }}
+                </div>
+                <div>
+                    <label for="{{ form.date_of_sale.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Date of Sale
+                    </label>
+                    {{ form.date_of_sale }}
+                </div>
+                <div>
+                    <label for="{{ form.notes.id_for_label }}" class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">
+                        Notes
+                    </label>
+                    {{ form.notes }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Cash Items Section -->
+        <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-6">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Cash Items</h3>
+                <button type="button" id="add-cash-item" 
+                        class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm transition-colors">
+                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                    </svg>
+                    Add Item
+                </button>
+            </div>
+
+            <!-- Formset Management Form -->
+            {{ formset.management_form }}
+
+            <div id="cash-items-container" class="space-y-4">
+                {% for form in formset %}
+                <div class="cash-item-row bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600" data-form-index="{{ forloop.counter0 }}">
+                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                        <!-- Hidden fields -->
+                        {% for hidden in form.hidden_fields %}
+                            {{ hidden }}
+                        {% endfor %}
+                        
+                        <!-- Item Selection -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Item</label>
+                            {{ form.item }}
+                        </div>
+                        
+                        <!-- Amount -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Amount</label>
+                            {{ form.amount }}
+                        </div>
+                        
+                        <!-- Rate (Read-only for display) -->
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Rate</label>
+                            <input type="text" class="rate-display form-control bg-gray-100 dark:bg-gray-600" 
+                                   value="{{ form.instance.rate|default:'0.0000' }}" readonly>
+                            {{ form.rate }}
+                        </div>
+                        
+                        <!-- Total Price (Auto-calculated) -->
+                        <div class="flex items-end space-x-2">
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Total</label>
+                                {{ form.total_price }}
+                            </div>
+                            <div class="flex space-x-2">
+                                {% if form.instance.pk %}
+                                    {{ form.DELETE }}
+                                    <label for="{{ form.DELETE.id_for_label }}" class="flex items-center">
+                                        <span class="text-sm text-red-600 dark:text-red-400 ml-1">Delete</span>
+                                    </label>
+                                {% endif %}
+                                <button type="button" class="remove-cash-item p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                                    <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                        <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                    </svg>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Total Summary -->
+        <div class="bg-blue-50 dark:bg-blue-900 rounded-lg p-6">
+            <div class="flex justify-between items-center">
+                <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Invoice Total</h3>
+                <div class="text-2xl font-bold text-blue-600 dark:text-blue-400" id="invoice-total">
+                    ₵{{ cash_invoice.total|floatformat:2 }}
+                </div>
+            </div>
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="flex justify-end space-x-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+            <a href="{% url 'manager_dashboard' %}?department=cash" 
+               class="px-6 py-3 bg-gray-300 hover:bg-gray-400 text-gray-700 font-medium rounded-lg transition-colors">
+                Cancel
+            </a>
+            <button type="submit" 
+                    class="px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg transition-colors">
+                Update Cash Invoice
+            </button>
+        </div>
+    </form>
+</div>
+
+<!-- JavaScript for dynamic form handling -->
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const container = document.getElementById('cash-items-container');
+    const addButton = document.getElementById('add-cash-item');
+    const totalFormsInput = document.getElementById('id_form-TOTAL_FORMS');
+    
+    // Initialize Select2 for existing forms
+    initializeSelect2();
+    setupEventListeners();
+    calculateTotal();
+    
+    // Add new item functionality
+    addButton.addEventListener('click', function() {
+        const formCount = parseInt(totalFormsInput.value);
+        const newFormHtml = createNewFormHtml(formCount);
+        
+        container.insertAdjacentHTML('beforeend', newFormHtml);
+        totalFormsInput.value = formCount + 1;
+        
+        // Initialize Select2 for the new form
+        initializeSelect2();
+        setupEventListeners();
+    });
+    
+    function createNewFormHtml(index) {
+        return `
+            <div class="cash-item-row bg-white dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-600" data-form-index="${index}">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <input type="hidden" name="form-${index}-id" id="id_form-${index}-id">
+                    <input type="hidden" name="form-${index}-invoice" id="id_form-${index}-invoice" value="{{ cash_invoice.id }}">
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Item</label>
+                        <select name="form-${index}-item" id="id_form-${index}-item" class="form-control cash-item-select">
+                            <option value="">Select item...</option>
+                        </select>
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Amount</label>
+                        <input type="number" step="0.01" name="form-${index}-amount" id="id_form-${index}-amount" class="form-control amount-input" placeholder="0.00">
+                    </div>
+                    
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Rate</label>
+                        <input type="text" class="rate-display form-control bg-gray-100 dark:bg-gray-600" value="0.0000" readonly>
+                        <input type="hidden" name="form-${index}-rate" id="id_form-${index}-rate" value="0">
+                    </div>
+                    
+                    <div class="flex items-end space-x-2">
+                        <div class="flex-1">
+                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-1">Total</label>
+                            <input type="number" step="0.01" name="form-${index}-total_price" id="id_form-${index}-total_price" class="form-control total-input" readonly>
+                        </div>
+                        <div>
+                            <button type="button" class="remove-cash-item p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        `;
+    }
+    
+    function initializeSelect2() {
+        $('.cash-item-select').select2({
+            ajax: {
+                url: '{% url "cash_product_search_api" %}',
+                dataType: 'json',
+                delay: 250,
+                data: function(params) {
+                    return { q: params.term };
+                },
+                processResults: function(data) {
+                    return { results: data };
+                },
+                cache: true
+            },
+            minimumInputLength: 1,
+            placeholder: 'Search for cash products...',
+            allowClear: true
+        });
+    }
+    
+    function setupEventListeners() {
+        // Remove item functionality
+        document.querySelectorAll('.remove-cash-item').forEach(button => {
+            button.addEventListener('click', function() {
+                const row = this.closest('.cash-item-row');
+                row.remove();
+                calculateTotal();
+            });
+        });
+        
+        // Item selection change
+        document.querySelectorAll('.cash-item-select').forEach(select => {
+            $(select).on('select2:select', function(e) {
+                const row = this.closest('.cash-item-row');
+                const data = e.params.data;
+                
+                if (data.rate) {
+                    const rateInput = row.querySelector('input[name$="-rate"]');
+                    const rateDisplay = row.querySelector('.rate-display');
+                    rateInput.value = data.rate;
+                    rateDisplay.value = parseFloat(data.rate).toFixed(4);
+                    updateRowTotal(row);
+                }
+            });
+        });
+        
+        // Amount change
+        document.querySelectorAll('.amount-input').forEach(input => {
+            input.addEventListener('input', function() {
+                const row = this.closest('.cash-item-row');
+                updateRowTotal(row);
+            });
+        });
+    }
+    
+    function updateRowTotal(row) {
+        const amountInput = row.querySelector('.amount-input');
+        const rateInput = row.querySelector('input[name$="-rate"]');
+        const totalInput = row.querySelector('.total-input');
+        const itemSelect = row.querySelector('.cash-item-select');
+        
+        const amount = parseFloat(amountInput.value) || 0;
+        let rate = parseFloat(rateInput.value) || 0;
+        
+        // Special handling for SUBSCRIBER WITHDRAWAL
+        const selectedOption = itemSelect.selectedOptions[0];
+        if (selectedOption && selectedOption.text.includes('SUBSCRIBER WITHDRAWAL')) {
+            rate = amount >= 6000 ? 0.001 : 0;
+            rateInput.value = rate;
+            row.querySelector('.rate-display').value = rate.toFixed(4);
+        }
+        
+        const total = amount * rate;
+        totalInput.value = total.toFixed(2);
+        calculateTotal();
+    }
+    
+    function calculateTotal() {
+        let total = 0;
+        document.querySelectorAll('.total-input').forEach(input => {
+            total += parseFloat(input.value) || 0;
+        });
+        document.getElementById('invoice-total').textContent = '₵' + total.toFixed(2);
+    }
+});
+</script>
+
+<style>
+.form-control {
+    width: 100%;
+    border-radius: 0.375rem;
+    border: 1px solid #d1d5db;
+    background-color: white;
+    color: #111827;
+    padding: 0.5rem 0.75rem;
+    font-size: 0.875rem;
+    transition: all 0.2s;
+}
+.dark .form-control {
+    border-color: #4b5563;
+    background-color: #1f2937;
+    color: white;
+}
+.form-control:focus {
+    outline: none;
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+</style>
+{% endblock %}

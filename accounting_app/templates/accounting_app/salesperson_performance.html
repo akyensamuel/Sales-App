@@ -66,7 +66,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Sales</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ total_sales|default:0|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">₵{{ total_sales|default:0|floatformat:2 }}</p>
                 </div>
                 <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full">
                     <i class="fas fa-dollar-sign text-green-600 dark:text-green-400"></i>
@@ -90,7 +90,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg Sale Value</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ avg_sale_value|default:0|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">₵{{ avg_sale_value|default:0|floatformat:2 }}</p>
                 </div>
                 <div class="p-3 bg-amber-100 dark:bg-amber-900 rounded-full">
                     <i class="fas fa-chart-bar text-amber-600 dark:text-amber-400"></i>
@@ -148,7 +148,7 @@
                         
                         <!-- Performance Metrics -->
                         <div class="text-right">
-                            <p class="text-xl font-bold text-gray-900 dark:text-white">${{ person.total_sales_amount|default:0|floatformat:2 }}</p>
+                            <p class="text-xl font-bold text-gray-900 dark:text-white">₵{{ person.total_sales_amount|default:0|floatformat:2 }}</p>
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ person.total_invoices|default:0 }} invoice{{ person.total_invoices|pluralize }}</p>
                             <span class="inline-block mt-2 px-3 py-1 text-xs font-semibold rounded-full
                                 {% if person.performance_rating == 'excellent' %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
@@ -276,16 +276,16 @@
                                     {% endif %}
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-gray-900 dark:text-white">${{ person.total_sales_amount|default:0|floatformat:2 }}</p>
+                                    <p class="font-semibold text-gray-900 dark:text-white">₵{{ person.total_sales_amount|default:0|floatformat:2 }}</p>
                                 </td>
                                 <td class="px-6 py-4">
                                     <p class="font-semibold text-gray-900 dark:text-white">{{ person.total_invoices|default:0 }}</p>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-gray-900 dark:text-white">${{ person.average_sale_value|default:0|floatformat:2 }}</p>
+                                    <p class="font-semibold text-gray-900 dark:text-white">₵{{ person.average_sale_value|default:0|floatformat:2 }}</p>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-green-600 dark:text-green-400">${{ person.commission_earned|default:0|floatformat:2 }}</p>
+                                    <p class="font-semibold text-green-600 dark:text-green-400">₵{{ person.commission_earned|default:0|floatformat:2 }}</p>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span class="px-2 py-1 text-xs font-semibold rounded-full

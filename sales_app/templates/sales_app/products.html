@@ -22,7 +22,7 @@
             {% for product in products %}
             <tr class="bg-white dark:bg-gray-900 border-b dark:border-gray-800 hover:bg-gray-50 dark:hover:bg-gray-800 transition product-row">
                 <td class="px-6 py-4 font-medium text-gray-900 dark:text-gray-100 product-name">{{ product.name }}</td>
-                <td class="px-6 py-4 text-green-700 dark:text-green-400 font-semibold">${{ product.price }}</td>
+                <td class="px-6 py-4 text-green-700 dark:text-green-400 font-semibold">₵{{ product.price }}</td>
                 <td class="px-6 py-4 font-semibold">
                     <span class="product-stock {% if product.stock < 50 %}text-red-600 dark:text-red-400 font-bold animate-pulse{% else %}text-green-700 dark:text-green-400{% endif %}">
                         {{ product.stock }}

@@ -1,0 +1,237 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cash Receipt - {{ invoice.invoice_no }}</title>
+    <style>
+        @page {
+            size: A4;
+            margin: 1cm;
+        }
+        
+        body {
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            line-height: 1.4;
+            margin: 0;
+            color: #000;
+        }
+        
+        .receipt-header {
+            text-align: center;
+            border-bottom: 2px solid #000;
+            padding-bottom: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .receipt-title {
+            font-size: 20px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .receipt-subtitle {
+            font-size: 14px;
+            margin: 5px 0;
+        }
+        
+        .receipt-info {
+            margin: 15px 0;
+            border-bottom: 1px solid #ccc;
+            padding-bottom: 10px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 5px 0;
+        }
+        
+        .receipt-items {
+            margin: 15px 0;
+        }
+        
+        .items-header {
+            border-bottom: 1px solid #000;
+            font-weight: bold;
+            padding: 5px 0;
+            display: flex;
+        }
+        
+        .items-header .col1 { flex: 3; }
+        .items-header .col2 { flex: 2; text-align: right; }
+        .items-header .col3 { flex: 1; text-align: right; }
+        .items-header .col4 { flex: 2; text-align: right; }
+        
+        .item-row {
+            padding: 8px 0;
+            border-bottom: 1px dotted #ccc;
+            display: flex;
+        }
+        
+        .item-row .col1 { flex: 3; }
+        .item-row .col2 { flex: 2; text-align: right; }
+        .item-row .col3 { flex: 1; text-align: right; }
+        .item-row .col4 { flex: 2; text-align: right; }
+        
+        .receipt-total {
+            margin-top: 15px;
+            border-top: 2px solid #000;
+            padding-top: 10px;
+            text-align: right;
+        }
+        
+        .total-row {
+            font-size: 16px;
+            font-weight: bold;
+            margin: 5px 0;
+        }
+        
+        .receipt-footer {
+            margin-top: 20px;
+            text-align: center;
+            border-top: 1px solid #ccc;
+            padding-top: 10px;
+            font-size: 10px;
+        }
+        
+        .special-note {
+            background: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            margin: 15px 0;
+            text-align: center;
+            font-size: 11px;
+        }
+
+        @media print {
+            body { -webkit-print-color-adjust: exact; }
+            .no-print { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div class="receipt-header">
+        <div class="receipt-title">CASH TRANSACTION RECEIPT</div>
+        <div class="receipt-subtitle">Cash Department</div>
+    </div>
+
+    <div class="receipt-info">
+        <div class="info-row">
+            <span><strong>Receipt No:</strong></span>
+            <span>{{ invoice.invoice_no }}</span>
+        </div>
+        <div class="info-row">
+            <span><strong>Date:</strong></span>
+            <span>{{ invoice.date_of_sale|date:"M d, Y" }}</span>
+        </div>
+        <div class="info-row">
+            <span><strong>Customer:</strong></span>
+            <span>{{ invoice.customer_name|default:"Walk-in Customer" }}</span>
+        </div>
+        {% if invoice.customer_phone %}
+        <div class="info-row">
+            <span><strong>Phone:</strong></span>
+            <span>{{ invoice.customer_phone }}</span>
+        </div>
+        {% endif %}
+        <div class="info-row">
+            <span><strong>Cashier:</strong></span>
+            <span>{{ invoice.user.username|default:"System" }}</span>
+        </div>
+        <div class="info-row">
+            <span><strong>Transaction Date:</strong></span>
+            <span>{{ invoice.date_of_sale|date:"M d, Y" }}</span>
+        </div>
+    </div>
+
+    <div class="receipt-items">
+        <div class="items-header">
+            <div class="col1">ITEM</div>
+            <div class="col2">AMOUNT</div>
+            <div class="col3">RATE</div>
+            <div class="col4">TOTAL</div>
+        </div>
+
+        {% for item in items %}
+        <div class="item-row">
+            <div class="col1">
+                {{ item.item }}
+                {% if item.item == "SUBSCRIBER WITHDRAWAL" %}
+                    {% if item.amount >= 6000 %}
+                    <br><small>(Special Rate Applied: ≥6000)</small>
+                    {% else %}
+                    <br><small>(No Charge: <6000)</small>
+                    {% endif %}
+                {% endif %}
+            </div>
+            <div class="col2">{{ item.amount|floatformat:2 }}</div>
+            <div class="col3">{{ item.rate|floatformat:4 }}</div>
+            <div class="col4">{{ item.total_price|floatformat:2 }}</div>
+        </div>
+        {% empty %}
+        <div class="item-row">
+            <div class="col1">No items found</div>
+            <div class="col2">-</div>
+            <div class="col3">-</div>
+            <div class="col4">0.00</div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <div class="receipt-total">
+        <div class="total-row">
+            <strong>TOTAL AMOUNT: {{ invoice.total|floatformat:2 }}</strong>
+        </div>
+        <div style="font-size: 14px; margin-top: 5px;">
+            <strong>PAYMENT STATUS: PAID</strong>
+        </div>
+    </div>
+
+    {% if invoice.notes %}
+    <div class="special-note">
+        <strong>Notes:</strong> {{ invoice.notes }}
+    </div>
+    {% endif %}
+
+    <!-- Special pricing information -->
+    {% for item in items %}
+        {% if item.item == "SUBSCRIBER WITHDRAWAL" %}
+        <div class="special-note">
+            <strong>SUBSCRIBER WITHDRAWAL Pricing:</strong><br>
+            • Amount ≥ 6000: Rate 0.001<br>
+            • Amount < 6000: No charge (Rate 0)
+            {% if item.amount >= 6000 %}
+            <br><em>This transaction qualifies for rate 0.001</em>
+            {% else %}
+            <br><em>This transaction has no charge (amount < 6000)</em>
+            {% endif %}
+        </div>
+        {% endif %}
+    {% endfor %}
+
+    <div class="receipt-footer">
+        <p>Thank you for your business!</p>
+        <p>This is a computer-generated receipt.</p>
+        <p>Printed on: {{ "now"|date:"M d, Y h:i A" }}</p>
+    </div>
+
+    <!-- Print controls -->
+    <div class="no-print" style="position: fixed; top: 10px; right: 10px;">
+        <button onclick="window.print()" style="padding: 10px 20px; background: #007cba; color: white; border: none; border-radius: 5px; cursor: pointer;">
+            Print Receipt
+        </button>
+        <button onclick="window.close()" style="padding: 10px 20px; background: #ccc; color: black; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            Close
+        </button>
+    </div>
+
+    <script>
+        // Auto-print when page loads
+        window.onload = function() {
+            window.print();
+        }
+    </script>
+</body>
+</html>

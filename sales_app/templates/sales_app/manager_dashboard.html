@@ -13,33 +13,109 @@
             
             <!-- Primary Action Buttons -->
             <div class="flex flex-wrap gap-4">
-                <a href="{% url 'sales_entry' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm shadow transition focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                    </svg>
-                    New Sale
-                </a>
-                
-                <!-- CSV Import Button -->
-                {% if request.user.is_superuser or request.user.groups.all %}
-                <button id="importButton" type="button" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded-lg text-sm shadow transition focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
-                    </svg>
-                    Import Sales CSV
-                </button>
-                {% endif %}
-                
-                {% load group_filters %}
-                {% if request.user|has_group:'Admin' %}
-                <a href="{% url 'products' %}" class="inline-flex items-center px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-medium rounded-lg text-sm shadow transition focus:ring-2 focus:ring-purple-500 focus:ring-offset-2">
-                    <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                        <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
-                    </svg>
-                    Products & Inventory
-                </a>
+                {% if department == 'cash' %}
+                    <a href="{% url 'cash_sales_entry' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:ring-offset-2 focus:ring-offset-gray-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        New Cash Sale
+                        <span class="ml-2 px-2 py-1 bg-green-800 bg-opacity-30 rounded text-xs font-medium">Cash</span>
+                    </a>
+                    
+                    <a href="{% url 'cash_products' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-700 hover:to-emerald-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 focus:ring-offset-gray-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        Cash Products
+                        <span class="ml-2 px-2 py-1 bg-emerald-800 bg-opacity-30 rounded text-xs font-medium">Manage</span>
+                    </a>
+                {% else %}
+                    <a href="{% url 'sales_entry' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 focus:ring-offset-gray-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                        </svg>
+                        New Sale
+                        <span class="ml-2 px-2 py-1 bg-blue-800 bg-opacity-30 rounded text-xs font-medium">Regular</span>
+                    </a>
+                    
+                    <!-- CSV Import Button -->
+                    {% if request.user.is_superuser or request.user.groups.all %}
+                    <button id="importButton" type="button" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M9 19l3 3m0 0l3-3m-3 3V10"/>
+                        </svg>
+                        Import Sales CSV
+                        <span class="ml-2 px-2 py-1 bg-indigo-800 bg-opacity-30 rounded text-xs font-medium">CSV</span>
+                    </button>
+                    {% endif %}
+                    
+                    {% load group_filters %}
+                    {% if request.user|has_group:'Admin' %}
+                    <a href="{% url 'products' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-purple-600 to-purple-700 hover:from-purple-700 hover:to-purple-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-purple-500 focus:ring-offset-2 focus:ring-offset-gray-50">
+                        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"/>
+                        </svg>
+                        Products & Inventory
+                        <span class="ml-2 px-2 py-1 bg-purple-800 bg-opacity-30 rounded text-xs font-medium">Admin</span>
+                    </a>
+                    {% endif %}
                 {% endif %}
             </div>
+        </div>
+    </div>
+
+    <!-- Department Tabs -->
+    <div class="bg-white dark:bg-gray-800 border-b border-gray-200 dark:border-gray-700 mb-6 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <nav class="flex space-x-8" aria-label="Tabs">
+                <a href="?department=regular{% if search_params.start_date %}&start_date={{ search_params.start_date }}{% endif %}{% if search_params.end_date %}&end_date={{ search_params.end_date }}{% endif %}{% if search_params.customer_name %}&customer_name={{ search_params.customer_name }}{% endif %}{% if search_params.customer_phone %}&customer_phone={{ search_params.customer_phone }}{% endif %}{% if search_params.invoice_no %}&invoice_no={{ search_params.invoice_no }}{% endif %}"
+                   class="group inline-flex items-center py-4 px-6 border-b-4 font-semibold text-sm transition-all duration-200 ease-in-out
+                   {% if department == 'regular' or not department %}
+                   border-blue-500 text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/20
+                   {% else %}
+                   border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30
+                   {% endif %}">
+                    <svg class="w-5 h-5 mr-3 transition-colors duration-200
+                    {% if department == 'regular' or not department %}
+                    text-blue-500 dark:text-blue-400
+                    {% else %}
+                    text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300
+                    {% endif %}" 
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                    </svg>
+                    <span>Regular Sales</span>
+                    {% if department == 'regular' or not department %}
+                    <span class="ml-3 hidden sm:inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300">
+                        Active
+                    </span>
+                    {% endif %}
+                </a>
+                
+                <a href="?department=cash{% if search_params.start_date %}&start_date={{ search_params.start_date }}{% endif %}{% if search_params.end_date %}&end_date={{ search_params.end_date }}{% endif %}{% if search_params.customer_name %}&customer_name={{ search_params.customer_name }}{% endif %}{% if search_params.customer_phone %}&customer_phone={{ search_params.customer_phone }}{% endif %}{% if search_params.invoice_no %}&invoice_no={{ search_params.invoice_no }}{% endif %}"
+                   class="group inline-flex items-center py-4 px-6 border-b-4 font-semibold text-sm transition-all duration-200 ease-in-out
+                   {% if department == 'cash' %}
+                   border-green-500 text-green-600 dark:text-green-400 bg-green-50 dark:bg-green-900/20
+                   {% else %}
+                   border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 dark:text-gray-400 dark:hover:text-gray-300 dark:hover:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-700/30
+                   {% endif %}">
+                    <svg class="w-5 h-5 mr-3 transition-colors duration-200
+                    {% if department == 'cash' %}
+                    text-green-500 dark:text-green-400
+                    {% else %}
+                    text-gray-400 group-hover:text-gray-600 dark:group-hover:text-gray-300
+                    {% endif %}" 
+                    fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                    </svg>
+                    <span>Cash Department</span>
+                    {% if department == 'cash' %}
+                    <span class="ml-3 hidden sm:inline-block px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300">
+                        Active
+                    </span>
+                    {% endif %}
+                </a>
+            </nav>
         </div>
     </div>
 
@@ -56,37 +132,45 @@
                 
                 <!-- Print Controls -->
                 <div class="flex flex-wrap gap-3 mt-4 lg:mt-0">
-                    <button onclick="printTodaysInvoices()" class="inline-flex items-center px-4 py-2 bg-green-600 hover:bg-green-700 text-white font-medium rounded text-sm shadow transition focus:ring-2 focus:ring-green-500">
+                    <button onclick="printTodaysInvoices()" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-green-500 focus:ring-offset-2">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                         </svg>
                         Print Today
+                        <span class="ml-2 px-1.5 py-0.5 bg-green-800 bg-opacity-30 rounded text-xs font-medium">Quick</span>
                     </button>
                     
-                    <button onclick="printSearchResults()" class="inline-flex items-center px-4 py-2 bg-orange-600 hover:bg-orange-700 text-white font-medium rounded text-sm shadow transition focus:ring-2 focus:ring-orange-500">
+                    <button onclick="printSearchResults()" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-orange-600 to-orange-700 hover:from-orange-700 hover:to-orange-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-orange-500 focus:ring-offset-2">
                         <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                             <path stroke-linecap="round" stroke-linejoin="round" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"/>
                         </svg>
                         Print Results
+                        <span class="ml-2 px-1.5 py-0.5 bg-orange-800 bg-opacity-30 rounded text-xs font-medium">Search</span>
                     </button>
                     
                     <div class="relative">
-                        <button onclick="toggleDatePicker()" class="inline-flex items-center px-4 py-2 bg-indigo-600 hover:bg-indigo-700 text-white font-medium rounded text-sm shadow transition focus:ring-2 focus:ring-indigo-500">
+                        <button onclick="toggleDatePicker()" class="inline-flex items-center px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2">
                             <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
                             </svg>
                             Print Date
+                            <span class="ml-2 px-1.5 py-0.5 bg-indigo-800 bg-opacity-30 rounded text-xs font-medium">Custom</span>
                         </button>
-                        <div id="datePicker" class="hidden absolute right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-lg p-4 z-10 min-w-[200px]">
+                        <div id="datePicker" class="hidden absolute right-0 mt-2 bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg shadow-xl p-4 z-10 min-w-[200px]">
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-200 mb-2">Select Date:</label>
-                            <input type="date" id="printDate" class="w-full rounded border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm mb-3">
-                            <button onclick="printSpecificDate()" class="w-full px-3 py-2 bg-indigo-600 hover:bg-indigo-700 text-white rounded text-sm font-medium">Print</button>
+                            <input type="date" id="printDate" class="w-full rounded-lg border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm mb-3 focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 transition-all">
+                            <button onclick="printSpecificDate()" class="w-full px-4 py-2 bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-700 hover:to-indigo-800 text-white rounded-lg text-sm font-semibold shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                                Print Selected Date
+                            </button>
                         </div>
                     </div>
                 </div>
             </div>
             
             <form method="get" class="space-y-4">
+                <!-- Hidden field to preserve department -->
+                <input type="hidden" name="department" value="{{ department|default:'regular' }}" />
+                
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                     <!-- Date Range Search -->
                     <div>
@@ -134,11 +218,12 @@
                     <div class="flex items-end">
                         <!-- Action Buttons moved here for better layout -->
                         <div class="flex flex-col sm:flex-row gap-4 w-full">
-                            <button type="submit" class="inline-flex items-center justify-center px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm shadow transition focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
+                            <button type="submit" class="inline-flex items-center justify-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200 focus:ring-2 focus:ring-blue-500 focus:ring-offset-2">
                                 <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
                                 </svg>
                                 Search Invoices
+                                <span class="ml-2 px-2 py-1 bg-blue-800 bg-opacity-30 rounded text-xs font-medium">Filter</span>
                             </button>
                             
                             <a href="{% url 'manager_dashboard' %}" class="inline-flex items-center justify-center px-6 py-2 bg-gray-500 hover:bg-gray-600 text-white font-medium rounded-lg text-sm shadow transition focus:ring-2 focus:ring-gray-500 focus:ring-offset-2">
@@ -217,7 +302,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-green-100 text-sm font-medium">Total Sales</p>
-                    <p class="text-3xl font-bold">${{ total_sales|floatformat:2 }}</p>
+                    <p class="text-3xl font-bold">₵{{ total_sales|floatformat:2 }}</p>
                 </div>
                 <div class="bg-green-500 bg-opacity-30 rounded-full p-3">
                     <svg class="w-8 h-8" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
@@ -247,9 +332,9 @@
                     <p class="text-purple-100 text-sm font-medium">Average Invoice</p>
                     <p class="text-3xl font-bold">
                         {% if invoices|length > 0 %}
-                            ${% widthratio total_sales invoices|length 1 %}
+                            ₵{% widthratio total_sales invoices|length 1 %}
                         {% else %}
-                            $0.00
+                            ₵0.00
                         {% endif %}
                     </p>
                 </div>
@@ -264,8 +349,45 @@
 
     <!-- Invoices Table -->
     <div class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Invoices</h3>
+        <div class="px-6 py-5 border-b border-gray-200 dark:border-gray-700 bg-gradient-to-r from-gray-50 to-gray-100 dark:from-gray-700 dark:to-gray-800">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center space-x-3">
+                    {% if department == 'cash' %}
+                        <div class="flex-shrink-0 w-10 h-10 bg-green-100 dark:bg-green-900 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 9V7a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2m2 4h10a2 2 0 002-2v-6a2 2 0 00-2-2H9a2 2 0 00-2 2v6a2 2 0 002 2zm7-5a2 2 0 11-4 0 2 2 0 014 0z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Cash Invoices</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Immediate cash transactions</p>
+                        </div>
+                    {% else %}
+                        <div class="flex-shrink-0 w-10 h-10 bg-blue-100 dark:bg-blue-900 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
+                            </svg>
+                        </div>
+                        <div>
+                            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100">Regular Invoices</h3>
+                            <p class="text-sm text-gray-600 dark:text-gray-400">Standard sales with inventory tracking</p>
+                        </div>
+                    {% endif %}
+                </div>
+                <div class="flex items-center space-x-2">
+                    <span class="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium
+                    {% if department == 'cash' %}
+                    bg-green-100 text-green-800 dark:bg-green-800/30 dark:text-green-300
+                    {% else %}
+                    bg-blue-100 text-blue-800 dark:bg-blue-800/30 dark:text-blue-300
+                    {% endif %}">
+                        <svg class="w-4 h-4 mr-1.5" fill="currentColor" viewBox="0 0 20 20">
+                            <path fill-rule="evenodd" d="M3 3a1 1 0 000 2v8a2 2 0 002 2h2.586l-1.293 1.293a1 1 0 101.414 1.414L10 15.414l2.293 2.293a1 1 0 001.414-1.414L12.414 15H15a2 2 0 002-2V5a1 1 0 100-2H3zm11.707 4.707a1 1 0 00-1.414-1.414L10 9.586 8.707 8.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"/>
+                        </svg>
+                        {{ invoices|length }} records
+                    </span>
+                </div>
+            </div>
         </div>
         
         <div class="overflow-x-auto">
@@ -275,16 +397,25 @@
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Invoice</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Customer</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Date</th>
+                        {% if department != 'cash' %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sales Rep</th>
+                        {% endif %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Total</th>
+                        {% if department != 'cash' %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Paid</th>
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Balance</th>
+                        {% endif %}
                         <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
                     </tr>
                 </thead>
                 <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
                     {% for invoice in invoices %}
-                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer invoice-row" data-invoice-url="{% url 'invoice_detail' invoice.id %}">
+                    <tr class="hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors cursor-pointer invoice-row" 
+                        {% if department == 'cash' %}
+                        data-invoice-url="{% url 'cash_receipt_print' invoice.id %}"
+                        {% else %}
+                        data-invoice-url="{% url 'invoice_detail' invoice.id %}"
+                        {% endif %}>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ invoice.invoice_no }}</div>
                         </td>
@@ -297,67 +428,114 @@
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-gray-100">{{ invoice.date_of_sale|date:'M d, Y' }}</div>
                         </td>
+                        {% if department != 'cash' %}
                         <td class="px-6 py-4 whitespace-nowrap">
                             <div class="text-sm text-gray-900 dark:text-gray-100">{{ invoice.user.username|title }}</div>
                         </td>
+                        {% endif %}
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">${{ invoice.total|floatformat:2 }}</div>
+                            <div class="text-sm font-medium text-gray-900 dark:text-gray-100">₵{{ invoice.total|floatformat:2 }}</div>
                         </td>
+                        {% if department != 'cash' %}
                         <td class="px-6 py-4 whitespace-nowrap">
-                            <div class="text-sm text-gray-900 dark:text-gray-100">${{ invoice.amount_paid|floatformat:2 }}</div>
+                            <div class="text-sm text-gray-900 dark:text-gray-100">₵{{ invoice.amount_paid|floatformat:2 }}</div>
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap">
                             <span class="inline-flex px-2 py-1 text-xs font-semibold rounded-full 
                                 {% if invoice.balance > 0 %}bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200
                                 {% elif invoice.balance == 0 %}bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200
                                 {% else %}bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200{% endif %}">
-                                ${{ invoice.balance|floatformat:2 }}
+                                ₵{{ invoice.balance|floatformat:2 }}
                             </span>
                         </td>
+                        {% endif %}
                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                             <div class="flex space-x-3">
-                                <a href="{% url 'edit_invoice' invoice.id %}" 
-                                   class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm font-medium transition-colors duration-200 action-btn"
-                                   title="Edit invoice">
-                                    <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                        <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
-                                    </svg>
-                                    Edit
-                                </a>
-                                <form method="post" onsubmit="return confirm('Are you sure you want to delete this invoice? This action cannot be undone.');" style="display:inline;">
-                                    {% csrf_token %}
-                                    <input type="hidden" name="delete_invoice_id" value="{{ invoice.id }}">
-                                    <button type="submit" 
-                                            class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors duration-200 action-btn"
-                                            title="Delete invoice">
+                                {% if department == 'cash' %}
+                                    <a href="{% url 'edit_cash_invoice' invoice.id %}" 
+                                       class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm font-medium transition-colors duration-200 action-btn"
+                                       title="Edit cash invoice">
                                         <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
                                         </svg>
-                                        Delete
-                                    </button>
-                                </form>
+                                        Edit
+                                    </a>
+                                    <a href="{% url 'cash_receipt_print' invoice.id %}" 
+                                       class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md text-sm font-medium transition-colors duration-200 action-btn"
+                                       title="View receipt">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/>
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/>
+                                        </svg>
+                                        View
+                                    </a>
+                                    <form method="post" onsubmit="return confirm('Are you sure you want to delete this cash invoice? This action cannot be undone.');" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="delete_cash_invoice_id" value="{{ invoice.id }}">
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors duration-200 action-btn"
+                                                title="Delete cash invoice">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </form>
+                                {% else %}
+                                    <a href="{% url 'edit_invoice' invoice.id %}" 
+                                       class="inline-flex items-center px-4 py-2 bg-yellow-500 hover:bg-yellow-600 text-white rounded-md text-sm font-medium transition-colors duration-200 action-btn"
+                                       title="Edit invoice">
+                                        <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                            <path stroke-linecap="round" stroke-linejoin="round" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                                        </svg>
+                                        Edit
+                                    </a>
+                                    <form method="post" onsubmit="return confirm('Are you sure you want to delete this invoice? This action cannot be undone.');" style="display:inline;">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="delete_invoice_id" value="{{ invoice.id }}">
+                                        <button type="submit" 
+                                                class="inline-flex items-center px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-md text-sm font-medium transition-colors duration-200 action-btn"
+                                                title="Delete invoice">
+                                            <svg class="w-4 h-4 mr-1.5" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                                            </svg>
+                                            Delete
+                                        </button>
+                                    </form>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>
                     {% empty %}
                     <tr>
-                        <td colspan="8" class="px-6 py-12 text-center">
+                        <td colspan="{% if department == 'cash' %}4{% else %}8{% endif %}" class="px-6 py-12 text-center">
                             <div class="flex flex-col items-center justify-center text-gray-500 dark:text-gray-400">
                                 <svg class="w-16 h-16 mb-4 opacity-50" fill="none" stroke="currentColor" stroke-width="1" viewBox="0 0 24 24">
                                     <path stroke-linecap="round" stroke-linejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"/>
                                 </svg>
                                 {% if search_params.start_date or search_params.end_date or search_params.customer_name or search_params.invoice_no %}
-                                    <h3 class="text-lg font-medium mb-2">No invoices found</h3>
-                                    <p class="text-sm">Try adjusting your search criteria or <a href="{% url 'manager_dashboard' %}" class="text-blue-600 hover:text-blue-800 underline">view all invoices</a></p>
+                                    <h3 class="text-lg font-medium mb-2">No {% if department == 'cash' %}cash {% endif %}invoices found</h3>
+                                    <p class="text-sm">Try adjusting your search criteria or <a href="{% url 'manager_dashboard' %}?department={{ department|default:'regular' }}" class="text-blue-600 hover:text-blue-800 underline">view all {% if department == 'cash' %}cash {% endif %}invoices</a></p>
                                 {% else %}
-                                    <h3 class="text-lg font-medium mb-2">No invoices for today</h3>
+                                    <h3 class="text-lg font-medium mb-2">No {% if department == 'cash' %}cash {% endif %}invoices for today</h3>
                                     <p class="text-sm mb-4">Use the search filters above to find invoices from other dates</p>
-                                    <a href="{% url 'sales_entry' %}" class="inline-flex items-center px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white font-medium rounded-lg text-sm">
-                                        <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
-                                            <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
-                                        </svg>
-                                        Create First Sale
-                                    </a>
+                                    {% if department == 'cash' %}
+                                        <a href="{% url 'cash_sales_entry' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            Create Cash Sale
+                                            <span class="ml-2 px-2 py-1 bg-green-800 bg-opacity-30 rounded text-xs font-medium">New</span>
+                                        </a>
+                                    {% else %}
+                                        <a href="{% url 'sales_entry' %}" class="inline-flex items-center px-6 py-3 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded-lg text-sm shadow-lg hover:shadow-xl transform hover:scale-105 transition-all duration-200">
+                                            <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 4v16m8-8H4"/>
+                                            </svg>
+                                            Create First Sale
+                                            <span class="ml-2 px-2 py-1 bg-blue-800 bg-opacity-30 rounded text-xs font-medium">Start</span>
+                                        </a>
+                                    {% endif %}
                                 {% endif %}
                             </div>
                         </td>

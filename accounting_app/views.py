@@ -204,7 +204,7 @@ def expense_create(request):
                 
                 log_audit_action(
                     request.user, 'create', 'Expense', expense.id,
-                    f'Created expense: {expense.description} - ${expense.amount}'
+                    f'Created expense: {expense.description} - ₵{expense.amount}'
                 )
                 
                 messages.success(request, 'Expense created successfully!')
@@ -240,7 +240,7 @@ def expense_edit(request, expense_id):
                 
                 log_audit_action(
                     request.user, 'update', 'Expense', expense.id,
-                    f'Updated expense: {expense.description} - Amount changed from ${old_amount} to ${expense.amount}'
+                    f'Updated expense: {expense.description} - Amount changed from ₵{old_amount} to ₵{expense.amount}'
                 )
                 
                 messages.success(request, 'Expense updated successfully!')
@@ -265,7 +265,7 @@ def expense_delete(request, expense_id):
     if request.method == 'POST':
         log_audit_action(
             request.user, 'delete', 'Expense', expense.id,
-            f'Deleted expense: {expense.description} - ${expense.amount}'
+            f'Deleted expense: {expense.description} - ₵{expense.amount}'
         )
         
         expense.delete()

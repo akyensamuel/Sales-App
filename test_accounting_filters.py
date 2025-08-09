@@ -37,7 +37,7 @@ def test_template_filters():
         
         # Test total_outstanding filter
         outstanding = total_outstanding(invoices)
-        print(f"✓ total_outstanding: ${outstanding}")
+        print(f"✓ total_outstanding: ₵{outstanding}")
         
         print("✅ All template filters working correctly")
         

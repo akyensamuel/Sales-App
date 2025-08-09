@@ -69,7 +69,7 @@
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Total Revenue</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">${{ total_revenue|default:0|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-gray-900 dark:text-white">₵{{ total_revenue|default:0|floatformat:2 }}</p>
                 </div>
                 <div class="p-3 bg-blue-100 dark:bg-blue-900 rounded-full">
                     <i class="fas fa-dollar-sign text-blue-600 dark:text-blue-400"></i>
@@ -139,7 +139,7 @@
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm">
-                                        <p class="font-semibold text-gray-900 dark:text-white">${{ product.total_revenue|default:0|floatformat:2 }}</p>
+                                        <p class="font-semibold text-gray-900 dark:text-white">₵{{ product.total_revenue|default:0|floatformat:2 }}</p>
                                         <div class="w-full bg-gray-200 dark:bg-gray-600 rounded-full h-2 mt-1">
                                             <div class="bg-green-600 h-2 rounded-full" style="width: {{ product.revenue_percentage|default:0 }}%"></div>
                                         </div>
@@ -150,12 +150,12 @@
                                     <p class="text-sm text-gray-600 dark:text-gray-400">units</p>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <p class="font-semibold text-gray-900 dark:text-white">${{ product.average_unit_price|default:0|floatformat:2 }}</p>
+                                    <p class="font-semibold text-gray-900 dark:text-white">₵{{ product.average_unit_price|default:0|floatformat:2 }}</p>
                                 </td>
                                 <td class="px-6 py-4">
                                     <div class="text-sm">
                                         <p class="font-semibold {% if product.total_profit >= 0 %}text-green-600 dark:text-green-400{% else %}text-red-600 dark:text-red-400{% endif %}">
-                                            ${{ product.total_profit|default:0|floatformat:2 }}
+                                            ₵{{ product.total_profit|default:0|floatformat:2 }}
                                         </p>
                                         <p class="text-xs text-gray-600 dark:text-gray-400">{{ product.profit_margin|default:0|floatformat:1 }}% margin</p>
                                     </div>

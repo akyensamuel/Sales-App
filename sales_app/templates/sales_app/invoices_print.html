@@ -278,7 +278,7 @@
         </div>
         <div class="summary-item">
             <div class="summary-label">Total Sales</div>
-            <div class="summary-value">${{ total_sales|floatformat:2 }}</div>
+            <div class="summary-value">₵{{ total_sales|floatformat:2 }}</div>
         </div>
         <div class="summary-item">
             <div class="summary-label">Average Invoice</div>
@@ -286,7 +286,7 @@
                 {% if invoices|length > 0 %}
                     ${% widthratio total_sales invoices|length 1 %}
                 {% else %}
-                    $0.00
+                    ₵0.00
                 {% endif %}
             </div>
         </div>
@@ -314,10 +314,10 @@
                 <td>{{ invoice.customer_name|default:"Walk-in Customer" }}</td>
                 <td>{{ invoice.date_of_sale|date:'M d, Y' }}</td>
                 <td>{{ invoice.user.username|title }}</td>
-                <td class="text-right">${{ invoice.total|floatformat:2 }}</td>
-                <td class="text-right">${{ invoice.amount_paid|floatformat:2 }}</td>
+                <td class="text-right">₵{{ invoice.total|floatformat:2 }}</td>
+                <td class="text-right">₵{{ invoice.amount_paid|floatformat:2 }}</td>
                 <td class="text-right {% if invoice.balance > 0 %}balance-negative{% elif invoice.balance == 0 %}balance-zero{% else %}balance-positive{% endif %}">
-                    ${{ invoice.balance|floatformat:2 }}
+                    ₵{{ invoice.balance|floatformat:2 }}
                 </td>
                 <td>
                     <div class="invoice-items">
@@ -336,8 +336,8 @@
                                 <tr>
                                     <td>{{ item.item }}</td>
                                     <td class="text-center">{{ item.quantity }}</td>
-                                    <td class="text-right">${{ item.unit_price|floatformat:2 }}</td>
-                                    <td class="text-right">${{ item.total_price|floatformat:2 }}</td>
+                                    <td class="text-right">₵{{ item.unit_price|floatformat:2 }}</td>
+                                    <td class="text-right">₵{{ item.total_price|floatformat:2 }}</td>
                                 </tr>
                                 {% endfor %}
                             </tbody>

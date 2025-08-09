@@ -225,7 +225,7 @@ window.addEventListener('beforeunload', function() {
                         <i class="fas fa-arrow-up"></i>
                     </div>
                     <h3 class="text-lg font-semibold text-green-800">Total Revenue</h3>
-                    <p class="text-2xl font-bold text-green-600">${{ total_revenue|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-green-600">₵{{ total_revenue|floatformat:2 }}</p>
                     <p class="text-sm text-green-700">{{ revenue_data.invoice_count }} invoice{{ revenue_data.invoice_count|pluralize }}</p>
                 </div>
 
@@ -235,7 +235,7 @@ window.addEventListener('beforeunload', function() {
                         <i class="fas fa-arrow-down"></i>
                     </div>
                     <h3 class="text-lg font-semibold text-red-800">Total Expenses</h3>
-                    <p class="text-2xl font-bold text-red-600">${{ total_expenses|floatformat:2 }}</p>
+                    <p class="text-2xl font-bold text-red-600">₵{{ total_expenses|floatformat:2 }}</p>
                     <p class="text-sm text-red-700">
                         {{ expense_data|length }} categor{{ expense_data|length|pluralize:"y,ies" }}
                     </p>
@@ -248,7 +248,7 @@ window.addEventListener('beforeunload', function() {
                     </div>
                     <h3 class="text-lg font-semibold text-blue-800">Net Profit</h3>
                     <p class="text-2xl font-bold {% if net_profit >= 0 %}text-blue-600{% else %}text-red-600{% endif %}">
-                        ${{ net_profit|floatformat:2 }}
+                        ₵{{ net_profit|floatformat:2 }}
                     </p>
                     <p class="text-sm {% if profit_margin >= 0 %}text-blue-700{% else %}text-red-700{% endif %}">
                         {{ profit_margin|floatformat:1 }}% margin
@@ -266,16 +266,16 @@ window.addEventListener('beforeunload', function() {
                     <div class="space-y-3">
                         <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-200">
                             <span class="font-medium text-gray-900 dark:text-white">Total Invoice Amount</span>
-                            <span class="font-bold text-green-600 dark:text-green-400">${{ revenue_data.total_revenue|floatformat:2 }}</span>
+                            <span class="font-bold text-green-600 dark:text-green-400">₵{{ revenue_data.total_revenue|floatformat:2 }}</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-200">
                             <span class="font-medium text-gray-900 dark:text-white">Amount Received</span>
-                            <span class="font-bold text-blue-600 dark:text-blue-400">${{ revenue_data.paid_revenue|floatformat:2 }}</span>
+                            <span class="font-bold text-blue-600 dark:text-blue-400">₵{{ revenue_data.paid_revenue|floatformat:2 }}</span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded border border-yellow-200 dark:border-yellow-700 transition-colors duration-200">
                             <span class="font-medium text-gray-900 dark:text-white">Outstanding Amount</span>
                             <span class="font-bold text-yellow-600 dark:text-yellow-400">
-                                ${{ revenue_data.total_revenue|subtract:revenue_data.paid_revenue|floatformat:2 }}
+                                ₵{{ revenue_data.total_revenue|subtract:revenue_data.paid_revenue|floatformat:2 }}
                             </span>
                         </div>
                         <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 rounded transition-colors duration-200">
@@ -298,14 +298,14 @@ window.addEventListener('beforeunload', function() {
                                         <span class="font-medium text-gray-900 dark:text-white">{{ expense.category__name }}</span>
                                         <span class="text-sm text-gray-600 dark:text-gray-400">({{ expense.count }} item{{ expense.count|pluralize }})</span>
                                     </div>
-                                    <span class="font-bold text-red-600 dark:text-red-400">${{ expense.total|floatformat:2 }}</span>
+                                    <span class="font-bold text-red-600 dark:text-red-400">₵{{ expense.total|floatformat:2 }}</span>
                                 </div>
                             {% endfor %}
                         </div>
                         <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-600 transition-colors duration-200">
                             <div class="flex justify-between items-center font-bold text-lg">
                                 <span class="text-gray-900 dark:text-white">Total Expenses</span>
-                                <span class="text-red-600 dark:text-red-400">${{ total_expenses|floatformat:2 }}</span>
+                                <span class="text-red-600 dark:text-red-400">₵{{ total_expenses|floatformat:2 }}</span>
                             </div>
                         </div>
                     {% else %}
@@ -323,16 +323,16 @@ window.addEventListener('beforeunload', function() {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                         <div>
                             <p class="text-sm text-gray-600">Total Revenue</p>
-                            <p class="text-xl font-bold text-green-600">${{ total_revenue|floatformat:2 }}</p>
+                            <p class="text-xl font-bold text-green-600">₵{{ total_revenue|floatformat:2 }}</p>
                         </div>
                         <div>
                             <p class="text-sm text-gray-600">Total Expenses</p>
-                            <p class="text-xl font-bold text-red-600">-${{ total_expenses|floatformat:2 }}</p>
+                            <p class="text-xl font-bold text-red-600">-₵{{ total_expenses|floatformat:2 }}</p>
                         </div>
                         <div class="border-l-2 border-gray-300 md:pl-4">
                             <p class="text-sm text-gray-600">Net Profit/Loss</p>
                             <p class="text-2xl font-bold {% if net_profit >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
-                                ${{ net_profit|floatformat:2 }}
+                                ₵{{ net_profit|floatformat:2 }}
                             </p>
                             <p class="text-sm {% if profit_margin >= 0 %}text-green-600{% else %}text-red-600{% endif %}">
                                 {{ profit_margin|floatformat:1 }}% margin

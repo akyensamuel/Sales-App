@@ -1,0 +1,169 @@
+{% extends "core/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block content %}
+<div class="max-w-6xl mx-auto mt-8 p-6 bg-white dark:bg-gray-800 rounded-lg shadow">
+    <div class="flex justify-between items-center mb-6">
+        <h2 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Cash Department Products</h2>
+        <button onclick="showAddModal()" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
+            Add Product
+        </button>
+    </div>
+
+    <!-- Products Table -->
+    <div class="overflow-x-auto">
+        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+            <thead class="bg-gray-50 dark:bg-gray-700">
+                <tr>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Product Name</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Rate</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Created Date</th>
+                    <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                </tr>
+            </thead>
+            <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                {% for product in products %}
+                <tr>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-gray-100">
+                        {{ product.name }}
+                        {% if product.name == "SUBSCRIBER WITHDRAWAL" %}
+                        <span class="ml-2 inline-flex px-2 py-1 text-xs font-medium bg-yellow-100 text-yellow-800 rounded-full">
+                            Rate: 0.001 for amounts ≥ 6000, otherwise 0
+                        </span>
+                        {% endif %}
+                    </td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ product.rate|floatformat:4 }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500 dark:text-gray-400">{{ product.created_at|date:"M d, Y" }}</td>
+                    <td class="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2">
+                        <button onclick="editProduct({{ product.id }}, '{{ product.name }}', '{{ product.rate }}')" class="text-indigo-600 hover:text-indigo-900 dark:text-indigo-400 dark:hover:text-indigo-300">Edit</button>
+                        <button onclick="confirmDelete({{ product.id }}, '{{ product.name }}')" class="text-red-600 hover:text-red-900 dark:text-red-400 dark:hover:text-red-300">Delete</button>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="4" class="px-6 py-4 text-center text-sm text-gray-500 dark:text-gray-400">
+                        No products found. <button onclick="showAddModal()" class="text-green-600 hover:text-green-800">Add the first product</button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Special Information Box -->
+    <div class="mt-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-700 rounded-lg">
+        <h3 class="text-sm font-medium text-blue-800 dark:text-blue-200 mb-2">Cash Department Pricing Information</h3>
+        <ul class="text-sm text-blue-700 dark:text-blue-300 space-y-1">
+            <li>• Products in the cash department use rate-based pricing (Rate × Amount = Total)</li>
+            <li>• <strong>SUBSCRIBER WITHDRAWAL</strong> has special handling: Rate 0.001 applies when amount ≥ 6000, otherwise no charge (rate 0)</li>
+            <li>• All cash transactions are considered paid immediately (no balance tracking)</li>
+        </ul>
+    </div>
+</div>
+
+<!-- Add/Edit Product Modal -->
+<div id="productModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3">
+            <h3 id="modalTitle" class="text-lg font-bold text-gray-900 dark:text-gray-100 text-center mb-4">Add New Product</h3>
+            <form id="productForm" method="post" action="">
+                {% csrf_token %}
+                <input type="hidden" id="productId" name="product_id" value="">
+                <div class="mb-4">
+                    <label for="productName" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">Product Name</label>
+                    <input type="text" id="productName" name="name" required 
+                           class="w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                </div>
+                <div class="mb-4">
+                    <label for="productRate" class="block mb-2 text-sm font-medium text-gray-900 dark:text-gray-100">Rate</label>
+                    <input type="number" id="productRate" name="rate" step="0.0001" required 
+                           class="w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Rate will be multiplied by the transaction amount</p>
+                </div>
+                <div class="flex justify-between">
+                    <button type="button" onclick="hideModal()" 
+                            class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-400 dark:hover:bg-gray-500">
+                        Cancel
+                    </button>
+                    <button type="submit" 
+                            class="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700">
+                        Save Product
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Delete Confirmation Modal -->
+<div id="deleteModal" class="hidden fixed inset-0 bg-gray-600 bg-opacity-50 overflow-y-auto h-full w-full z-50">
+    <div class="relative top-20 mx-auto p-5 border w-96 shadow-lg rounded-md bg-white dark:bg-gray-800">
+        <div class="mt-3 text-center">
+            <h3 class="text-lg font-bold text-gray-900 dark:text-gray-100 mb-4">Confirm Delete</h3>
+            <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
+                Are you sure you want to delete "<span id="deleteProductName"></span>"?
+            </p>
+            <div class="flex justify-center space-x-4">
+                <button onclick="hideDeleteModal()" 
+                        class="px-4 py-2 bg-gray-300 dark:bg-gray-600 text-gray-700 dark:text-gray-300 rounded hover:bg-gray-400 dark:hover:bg-gray-500">
+                    Cancel
+                </button>
+                <form id="deleteForm" method="post" action="" class="inline">
+                    {% csrf_token %}
+                    <button type="submit" 
+                            class="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700">
+                        Delete
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showAddModal() {
+    document.getElementById('modalTitle').textContent = 'Add New Product';
+    document.getElementById('productForm').action = '{% url "cash_products" %}';
+    document.getElementById('productId').value = '';
+    document.getElementById('productName').value = '';
+    document.getElementById('productRate').value = '';
+    document.getElementById('productModal').classList.remove('hidden');
+}
+
+function editProduct(id, name, rate) {
+    document.getElementById('modalTitle').textContent = 'Edit Product';
+    document.getElementById('productForm').action = '{% url "cash_products" %}';
+    document.getElementById('productId').value = id;
+    document.getElementById('productName').value = name;
+    document.getElementById('productRate').value = rate;
+    document.getElementById('productModal').classList.remove('hidden');
+}
+
+function hideModal() {
+    document.getElementById('productModal').classList.add('hidden');
+}
+
+function confirmDelete(id, name) {
+    document.getElementById('deleteProductName').textContent = name;
+    document.getElementById('deleteForm').action = '/sales/cash/products/delete/' + id + '/';
+    document.getElementById('deleteModal').classList.remove('hidden');
+}
+
+function hideDeleteModal() {
+    document.getElementById('deleteModal').classList.add('hidden');
+}
+
+// Close modals when clicking outside
+window.onclick = function(event) {
+    const productModal = document.getElementById('productModal');
+    const deleteModal = document.getElementById('deleteModal');
+    if (event.target == productModal) {
+        hideModal();
+    }
+    if (event.target == deleteModal) {
+        hideDeleteModal();
+    }
+}
+</script>
+{% endblock %}
