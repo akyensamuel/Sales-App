@@ -5,5 +5,7 @@ services:
     buildCommand: |
       pip install -r requirements.txt
       python manage.py collectstatic --noinput
-    preDeployCommand: python manage.py migrate
+    preDeployCommand: |
+      python manage.py migrate --noinput
+      python manage.py clear_db_cache
     startCommand: gunicorn sales_management_project.wsgi:application
