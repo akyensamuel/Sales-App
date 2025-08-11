@@ -128,6 +128,28 @@ def restore_stock_for_sale_items(sale_items, invoice_no):
 
 def process_csv_import(csv_file):
     """Process CSV file import and return results"""
+    from datetime import datetime
+    
+    def parse_csv_date(date_string):
+        """Parse DD/M/YYYY format to proper date object"""
+        if not date_string or date_string.strip() == '' or date_string.strip() == ';':
+            return timezone.now().date()
+        
+        try:
+            # Try DD/M/YYYY format first (from your CSV)
+            return datetime.strptime(date_string.strip(), '%d/%m/%Y').date()
+        except ValueError:
+            try:
+                # Try DD-M-YYYY format
+                return datetime.strptime(date_string.strip(), '%d-%m-%Y').date()
+            except ValueError:
+                try:
+                    # Try YYYY-MM-DD format (standard Django format)
+                    return datetime.strptime(date_string.strip(), '%Y-%m-%d').date()
+                except ValueError:
+                    logger.warning(f"Could not parse date: {date_string}, using current date")
+                    return timezone.now().date()
+    
     decoded_file = csv_file.read().decode('utf-8')
     io_string = io.StringIO(decoded_file)
     reader = csv.DictReader(io_string)
@@ -136,7 +158,8 @@ def process_csv_import(csv_file):
     for idx, row in enumerate(reader, start=2):
         try:
             # Handle different CSV column name variations
-            date_of_sale = row.get('Date of Sale') or row.get('DATE_TODAY')
+            date_string = row.get('Date of Sale') or row.get('DATE_TODAY')
+            date_of_sale = parse_csv_date(date_string)
             invoice_no = row.get('Invoice No') or row.get('INV NO')
             teller = row.get('User') or row.get('TELLER')
             customer_name = row.get('Customer Name') or row.get('CUSTOMER NA')
@@ -154,7 +177,7 @@ def process_csv_import(csv_file):
                 defaults={
                     'customer_name': customer_name,
                     'customer_phone': customer_phone,
-                    'date_of_sale': date_of_sale,
+                    'date_of_sale': date_of_sale,  # Now using properly parsed date
                     'amount_paid': amount_paid,
                     'total': total_amount,
                 }
