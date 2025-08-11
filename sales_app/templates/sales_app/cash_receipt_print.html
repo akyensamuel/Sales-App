@@ -5,216 +5,350 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cash Receipt - {{ invoice.invoice_no }}</title>
     <style>
+        /* Thermal POS Printer Optimized CSS */
         @page {
-            size: A4;
-            margin: 1cm;
+            size: 80mm 297mm; /* 80mm thermal paper width */
+            margin: 2mm 3mm 2mm 3mm;
         }
         
         body {
-            font-family: 'Courier New', monospace;
-            font-size: 12px;
-            line-height: 1.4;
+            font-family: 'Courier New', 'Lucida Console', monospace;
+            font-size: 11px;
+            font-weight: bold; /* Make all text bold for thermal clarity */
+            line-height: 1.2;
             margin: 0;
+            padding: 0;
             color: #000;
+            width: 74mm; /* Account for margins */
+            max-width: 74mm;
+            background: #fff;
         }
         
+        /* Header Section */
         .receipt-header {
             text-align: center;
             border-bottom: 2px solid #000;
-            padding-bottom: 10px;
-            margin-bottom: 15px;
+            padding-bottom: 3mm;
+            margin-bottom: 3mm;
+        }
+        
+        .store-name {
+            font-size: 16px;
+            font-weight: 900;
+            letter-spacing: 1px;
+            margin: 1mm 0;
         }
         
         .receipt-title {
-            font-size: 20px;
-            font-weight: bold;
-            margin: 5px 0;
+            font-size: 14px;
+            font-weight: 900;
+            margin: 2mm 0;
+            text-decoration: underline;
         }
         
         .receipt-subtitle {
-            font-size: 14px;
-            margin: 5px 0;
+            font-size: 12px;
+            font-weight: bold;
+            margin: 1mm 0;
         }
         
+        /* Transaction Info Section */
         .receipt-info {
-            margin: 15px 0;
-            border-bottom: 1px solid #ccc;
-            padding-bottom: 10px;
+            margin: 3mm 0;
+            border-bottom: 1px dashed #000;
+            padding-bottom: 3mm;
         }
         
         .info-row {
             display: flex;
             justify-content: space-between;
-            margin: 5px 0;
+            margin: 1.5mm 0;
+            font-weight: bold;
         }
         
+        .info-label {
+            font-weight: 900;
+            width: 35mm;
+            text-transform: uppercase;
+        }
+        
+        .info-value {
+            font-weight: bold;
+            text-align: right;
+            flex: 1;
+        }
+        
+        /* Items Section */
         .receipt-items {
-            margin: 15px 0;
+            margin: 3mm 0;
         }
         
         .items-header {
-            border-bottom: 1px solid #000;
-            font-weight: bold;
-            padding: 5px 0;
-            display: flex;
-        }
-        
-        .items-header .col1 { flex: 3; }
-        .items-header .col2 { flex: 2; text-align: right; }
-        .items-header .col3 { flex: 1; text-align: right; }
-        .items-header .col4 { flex: 2; text-align: right; }
-        
-        .item-row {
-            padding: 8px 0;
-            border-bottom: 1px dotted #ccc;
-            display: flex;
-        }
-        
-        .item-row .col1 { flex: 3; }
-        .item-row .col2 { flex: 2; text-align: right; }
-        .item-row .col3 { flex: 1; text-align: right; }
-        .item-row .col4 { flex: 2; text-align: right; }
-        
-        .receipt-total {
-            margin-top: 15px;
-            border-top: 2px solid #000;
-            padding-top: 10px;
-            text-align: right;
-        }
-        
-        .total-row {
-            font-size: 16px;
-            font-weight: bold;
-            margin: 5px 0;
-        }
-        
-        .receipt-footer {
-            margin-top: 20px;
-            text-align: center;
-            border-top: 1px solid #ccc;
-            padding-top: 10px;
+            border-bottom: 2px solid #000;
+            font-weight: 900;
+            padding: 2mm 0;
+            margin-bottom: 2mm;
+            text-transform: uppercase;
             font-size: 10px;
         }
         
+        .items-header-row {
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .item-row {
+            padding: 2mm 0;
+            border-bottom: 1px dotted #000;
+            margin-bottom: 1mm;
+            font-weight: bold;
+        }
+        
+        .item-name {
+            font-weight: 900;
+            font-size: 11px;
+            margin-bottom: 1mm;
+            text-transform: uppercase;
+            word-wrap: break-word;
+        }
+        
+        .item-details {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            font-weight: bold;
+        }
+        
+        .item-amount {
+            font-weight: 900;
+        }
+        
+        .item-rate {
+            font-weight: bold;
+        }
+        
+        .item-total {
+            font-weight: 900;
+            text-align: right;
+        }
+        
+        /* Special Item Notes */
+        .item-note {
+            font-size: 9px;
+            font-weight: bold;
+            font-style: italic;
+            margin-top: 1mm;
+            color: #333;
+        }
+        
+        /* Total Section */
+        .receipt-total {
+            margin-top: 4mm;
+            border-top: 2px solid #000;
+            border-bottom: 2px solid #000;
+            padding: 3mm 0;
+            text-align: center;
+            background: #f8f8f8;
+        }
+        
+        .total-amount {
+            font-size: 16px;
+            font-weight: 900;
+            margin: 2mm 0;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+        }
+        
+        .payment-status {
+            font-size: 14px;
+            font-weight: 900;
+            margin: 2mm 0;
+            text-decoration: underline;
+        }
+        
+        /* Notes and Special Sections */
         .special-note {
             background: #f0f0f0;
-            border: 1px solid #ccc;
-            padding: 10px;
-            margin: 15px 0;
+            border: 2px solid #000;
+            padding: 2mm;
+            margin: 3mm 0;
             text-align: center;
-            font-size: 11px;
+            font-weight: bold;
+            font-size: 10px;
         }
-
+        
+        .special-note strong {
+            font-weight: 900;
+            text-transform: uppercase;
+        }
+        
+        /* Footer Section */
+        .receipt-footer {
+            margin-top: 4mm;
+            text-align: center;
+            border-top: 1px dashed #000;
+            padding-top: 3mm;
+            font-size: 9px;
+            font-weight: bold;
+        }
+        
+        .footer-line {
+            margin: 1mm 0;
+            font-weight: bold;
+        }
+        
+        .thank-you {
+            font-size: 12px;
+            font-weight: 900;
+            text-transform: uppercase;
+            margin: 2mm 0;
+        }
+        
+        /* Print Media Styles */
         @media print {
-            body { -webkit-print-color-adjust: exact; }
-            .no-print { display: none !important; }
+            body { 
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+                font-weight: bold !important;
+            }
+            .no-print { 
+                display: none !important; 
+            }
+            * {
+                font-weight: bold !important;
+            }
+            .store-name, .receipt-title, .total-amount, .payment-status {
+                font-weight: 900 !important;
+            }
+        }
+        
+        /* Hide print buttons on print */
+        .no-print {
+            display: block;
+        }
+        
+        @media print {
+            .no-print {
+                display: none !important;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Receipt Header -->
     <div class="receipt-header">
-        <div class="receipt-title">CASH TRANSACTION RECEIPT</div>
+        <div class="store-name">SALES MANAGEMENT</div>
+        <div class="receipt-title">CASH RECEIPT</div>
         <div class="receipt-subtitle">Cash Department</div>
     </div>
 
+    <!-- Transaction Information -->
     <div class="receipt-info">
         <div class="info-row">
-            <span><strong>Receipt No:</strong></span>
-            <span>{{ invoice.invoice_no }}</span>
+            <span class="info-label">Receipt No:</span>
+            <span class="info-value">{{ invoice.invoice_no }}</span>
         </div>
         <div class="info-row">
-            <span><strong>Date:</strong></span>
-            <span>{{ invoice.date_of_sale|date:"M d, Y" }}</span>
+            <span class="info-label">Date:</span>
+            <span class="info-value">{{ invoice.date_of_sale|date:"M d, Y" }}</span>
         </div>
         <div class="info-row">
-            <span><strong>Customer:</strong></span>
-            <span>{{ invoice.customer_name|default:"Walk-in Customer" }}</span>
+            <span class="info-label">Time:</span>
+            <span class="info-value">{{ "now"|date:"h:i A" }}</span>
+        </div>
+        <div class="info-row">
+            <span class="info-label">Customer:</span>
+            <span class="info-value">{{ invoice.customer_name|default:"Walk-in" }}</span>
         </div>
         {% if invoice.customer_phone %}
         <div class="info-row">
-            <span><strong>Phone:</strong></span>
-            <span>{{ invoice.customer_phone }}</span>
+            <span class="info-label">Phone:</span>
+            <span class="info-value">{{ invoice.customer_phone }}</span>
         </div>
         {% endif %}
         <div class="info-row">
-            <span><strong>Cashier:</strong></span>
-            <span>{{ invoice.user.username|default:"System" }}</span>
-        </div>
-        <div class="info-row">
-            <span><strong>Transaction Date:</strong></span>
-            <span>{{ invoice.date_of_sale|date:"M d, Y" }}</span>
+            <span class="info-label">Cashier:</span>
+            <span class="info-value">{{ invoice.user.username|default:"System" }}</span>
         </div>
     </div>
 
+    <!-- Items Section -->
     <div class="receipt-items">
         <div class="items-header">
-            <div class="col1">ITEM</div>
-            <div class="col2">AMOUNT</div>
-            <div class="col3">RATE</div>
-            <div class="col4">TOTAL</div>
+            <div class="items-header-row">
+                <span>ITEMS</span>
+                <span>TOTAL</span>
+            </div>
         </div>
 
         {% for item in items %}
         <div class="item-row">
-            <div class="col1">
-                {{ item.item }}
-                {% if item.item == "SUBSCRIBER WITHDRAWAL" %}
-                    {% if item.amount >= 6000 %}
-                    <br><small>(Special Rate Applied: ≥6000)</small>
-                    {% else %}
-                    <br><small>(No Charge: <6000)</small>
-                    {% endif %}
-                {% endif %}
+            <div class="item-name">{{ item.item|upper }}</div>
+            <div class="item-details">
+                <span>Amt: <span class="item-amount">{{ item.amount|floatformat:2 }}</span></span>
+                <span>Rate: <span class="item-rate">{{ item.rate|floatformat:4 }}</span></span>
+                <span class="item-total">{{ item.total_price|floatformat:2 }}</span>
             </div>
-            <div class="col2">{{ item.amount|floatformat:2 }}</div>
-            <div class="col3">{{ item.rate|floatformat:4 }}</div>
-            <div class="col4">{{ item.total_price|floatformat:2 }}</div>
+            {% if item.item == "SUBSCRIBER WITHDRAWAL" %}
+                {% if item.amount >= 6000 %}
+                <div class="item-note">SPECIAL RATE: ≥6000</div>
+                {% else %}
+                <div class="item-note">NO CHARGE: <6000</div>
+                {% endif %}
+            {% endif %}
         </div>
         {% empty %}
         <div class="item-row">
-            <div class="col1">No items found</div>
-            <div class="col2">-</div>
-            <div class="col3">-</div>
-            <div class="col4">0.00</div>
+            <div class="item-name">NO ITEMS FOUND</div>
+            <div class="item-details">
+                <span class="item-total">0.00</span>
+            </div>
         </div>
         {% endfor %}
     </div>
 
+    <!-- Total Section -->
     <div class="receipt-total">
-        <div class="total-row">
-            <strong>TOTAL AMOUNT: {{ invoice.total|floatformat:2 }}</strong>
-        </div>
-        <div style="font-size: 14px; margin-top: 5px;">
-            <strong>PAYMENT STATUS: PAID</strong>
+        <div class="total-amount">
+            TOTAL: {{ invoice.total|floatformat:2 }}
         </div>
     </div>
 
+    <!-- Notes Section -->
     {% if invoice.notes %}
     <div class="special-note">
-        <strong>Notes:</strong> {{ invoice.notes }}
+        <strong>NOTES:</strong><br>
+        {{ invoice.notes|upper }}
     </div>
     {% endif %}
 
-    <!-- Special pricing information -->
-    {% for item in items %}
-        {% if item.item == "SUBSCRIBER WITHDRAWAL" %}
-        <div class="special-note">
-            <strong>SUBSCRIBER WITHDRAWAL Pricing:</strong><br>
-            • Amount ≥ 6000: Rate 0.001<br>
-            • Amount < 6000: No charge (Rate 0)
-            {% if item.amount >= 6000 %}
-            <br><em>This transaction qualifies for rate 0.001</em>
-            {% else %}
-            <br><em>This transaction has no charge (amount < 6000)</em>
+    <!-- Special Pricing Information -->
+    {% if items %}
+        {% for item in items %}
+            {% if item.item == "SUBSCRIBER WITHDRAWAL" %}
+            <div class="special-note">
+                <strong>SUBSCRIBER WITHDRAWAL:</strong><br>
+                • AMT ≥6000: RATE 0.001<br>
+                • AMT <6000: NO CHARGE<br>
+                {% if item.amount >= 6000 %}
+                <em>RATE 0.001 APPLIED</em>
+                {% else %}
+                <em>NO CHARGE APPLIED</em>
+                {% endif %}
+            </div>
             {% endif %}
-        </div>
-        {% endif %}
-    {% endfor %}
+        {% endfor %}
+    {% endif %}
 
+    <!-- Receipt Footer -->
     <div class="receipt-footer">
-        <p>Thank you for your business!</p>
-        <p>This is a computer-generated receipt.</p>
-        <p>Printed on: {{ "now"|date:"M d, Y h:i A" }}</p>
+        <div class="thank-you">THANK YOU!</div>
+        <div class="footer-line">Computer Generated Receipt</div>
+        <div class="footer-line">{{ "now"|date:"M d, Y h:i A" }}</div>
+        <div class="footer-line" style="margin-top: 3mm; border-top: 1px dashed #000; padding-top: 2mm;">
+            Please keep this receipt<br>
+            for your records
+        </div>
     </div>
 
     <!-- Print controls -->
@@ -222,8 +356,8 @@
         <button onclick="window.print()" style="padding: 10px 20px; background: #007cba; color: white; border: none; border-radius: 5px; cursor: pointer;">
             Print Receipt
         </button>
-        <button onclick="window.close()" style="padding: 10px 20px; background: #ccc; color: black; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
-            Close
+        <button onclick="goBackToSalesEntry()" style="padding: 10px 20px; background: #6c757d; color: white; border: none; border-radius: 5px; cursor: pointer; margin-left: 10px;">
+            Back to Sales Entry
         </button>
     </div>
 
@@ -231,6 +365,11 @@
         // Auto-print when page loads
         window.onload = function() {
             window.print();
+        }
+        
+        // Navigate back to cash sales entry
+        function goBackToSalesEntry() {
+            window.location.href = '{% url "cash_sales_entry" %}';
         }
     </script>
 </body>

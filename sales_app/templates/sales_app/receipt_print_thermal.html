@@ -258,7 +258,7 @@
             </div>
             <div class="info-row">
                 <span class="label">Time:</span>
-                <span class="info-value">{{ "now"|date:'h:i A' }}</span>
+                <span class="info-value">{{ invoice.date_of_sale|date:'h:i A' }}</span>
             </div>
             <div class="info-row">
                 <span class="label">Customer:</span>
@@ -347,29 +347,8 @@
 
         <!-- Print Controls -->
         <div class="print-hidden" style="text-align: center; margin-top: 5mm;">
-            <!-- Auto-Print Status Message -->
-            <div id="print-status" style="background: #e3f2fd; border: 2px solid #2196f3; padding: 15px; margin: 10px 0; border-radius: 8px; color: #1565c0;">
-                <h3 style="margin: 0 0 10px 0; color: #1565c0;">📄 Receipt Ready for Printing!</h3>
-                <p style="margin: 5px 0;">The print dialog should open automatically.</p>
-                <p style="margin: 5px 0; font-size: 14px;">If it doesn't appear, click "Print Again" below.</p>
-            </div>
-            
-            <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
-                <button onclick="window.print()" class="print-button" style="background: #4CAF50; font-size: 16px; padding: 12px 24px;">
-                    🖨️ Print Again
-                </button>
-                <button onclick="goBackToEntry()" class="print-button" style="background: #6c757d; font-size: 16px; padding: 12px 24px;">
-                    ← Back to Sales Entry
-                </button>
-            </div>
-            
-            <!-- Instructions -->
-            <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; font-size: 14px; color: #856404;">
-                <strong>💡 Printing Tips:</strong><br>
-                • If print dialog doesn't appear, your browser may be blocking pop-ups<br>
-                • Check browser settings to allow pop-ups for this site<br>
-                • Use Ctrl+P if automatic printing fails
-            </div>
+            <button onclick="window.print()" class="print-button">Print Again</button>
+            <button onclick="goBackToEntry()" class="print-button" style="background-color: #6c757d;">Back to Entry</button>
         </div>
     </div>
 
@@ -395,61 +374,17 @@
                 // Calculate balance first
                 calculateBalance();
                 
-                // Show a brief message to user
-                const loadingMsg = document.createElement('div');
-                loadingMsg.innerHTML = `
-                    <div style="position: fixed; top: 20px; left: 50%; transform: translateX(-50%); 
-                                background: #4CAF50; color: white; padding: 12px 24px; 
-                                border-radius: 8px; box-shadow: 0 4px 8px rgba(0,0,0,0.2); 
-                                z-index: 10000; font-weight: bold; text-align: center;">
-                        📄 Receipt Ready! Print dialog opening...
-                    </div>
-                `;
-                document.body.appendChild(loadingMsg);
+                // Trigger print dialog
+                window.print();
                 
-                // Small delay to let user see the message, then trigger print
+                // Set up redirect with fallback options
                 setTimeout(function() {
-                    console.log('Triggering print dialog...');
-                    window.print();
-                    
-                    // Remove the loading message after print is triggered
-                    setTimeout(function() {
-                        if (loadingMsg.parentNode) {
-                            loadingMsg.parentNode.removeChild(loadingMsg);
-                        }
-                    }, 1000);
-                    
-                }, 300);
-                
-                // Set up redirect with longer timeout to allow printing
-                setTimeout(function() {
-                    console.log('Auto-redirect timeout reached, going back to sales entry...');
                     goBackToEntry();
-                }, 5000); // Increased timeout to 5 seconds
-                
-                // Handle print dialog events if supported
-                if (window.matchMedia) {
-                    const mediaQueryList = window.matchMedia('print');
-                    const handlePrintChange = function(mql) {
-                        if (!mql.matches) {
-                            console.log('Print dialog closed, redirecting...');
-                            setTimeout(goBackToEntry, 1000);
-                        }
-                    };
-                    
-                    try {
-                        mediaQueryList.addListener(handlePrintChange);
-                    } catch (e) {
-                        console.log('Print event listener not supported');
-                    }
-                }
+                }, 2000); // Increased timeout to allow print dialog
                 
             } catch (error) {
                 console.error('Print error:', error);
                 calculateBalance(); // Still calculate balance even if print fails
-                
-                // Show error message to user
-                alert('Receipt loaded but auto-print failed. Please use the "Print Again" button below.');
             }
         }
         
