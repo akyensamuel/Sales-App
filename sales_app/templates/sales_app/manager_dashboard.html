@@ -709,7 +709,8 @@ document.addEventListener('DOMContentLoaded', function() {
 // Print functionality
 function printTodaysInvoices() {
     const today = new Date().toISOString().split('T')[0];
-    window.open(`/sales/print_daily/?date=${today}`, '_blank');
+    const department = '{{ department }}';
+    window.open(`/sales/print_daily/?date=${today}&department=${department}`, '_blank');
 }
 
 function printSearchResults() {
@@ -719,12 +720,16 @@ function printSearchResults() {
     const startDate = document.getElementById('start_date').value;
     const endDate = document.getElementById('end_date').value;
     const customerName = document.getElementById('customer_name').value;
+    const customerPhone = document.getElementById('customer_phone').value;
     const invoiceNo = document.getElementById('invoice_no').value;
+    const department = '{{ department }}';
     
     if (startDate) params.append('start_date', startDate);
     if (endDate) params.append('end_date', endDate);
     if (customerName) params.append('customer_name', customerName);
+    if (customerPhone) params.append('customer_phone', customerPhone);
     if (invoiceNo) params.append('invoice_no', invoiceNo);
+    params.append('department', department);
     
     window.open(`/sales/print_search/?${params.toString()}`, '_blank');
 }
@@ -736,8 +741,9 @@ function toggleDatePicker() {
 
 function printSpecificDate() {
     const date = document.getElementById('printDate').value;
+    const department = '{{ department }}';
     if (date) {
-        window.open(`/sales/print_daily/?date=${date}`, '_blank');
+        window.open(`/sales/print_daily/?date=${date}&department=${department}`, '_blank');
         document.getElementById('datePicker').classList.add('hidden');
     } else {
         alert('Please select a date');

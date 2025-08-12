@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{% if print_type == 'daily' %}Daily Cash Transactions - {{ print_date|date:'F d, Y' }}{% else %}Cash Search Results{% endif %}</title>
+    <style>
+        @media print {
+            @page {
+                size: A4;
+                margin: 0.5in;
+            }
+            body {
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+            .print-hidden {
+                display: none !important;
+            }
+            .page-break {
+                page-break-before: always;
+            }
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background: #fff;
+            color: #333;
+            font-size: 12px;
+            line-height: 1.4;
+        }
+        
+        .print-header {
+            text-align: center;
+            border-bottom: 3px solid #333;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+        }
+        
+        .print-header h1 {
+            margin: 0 0 10px 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+        
+        .print-header .subtitle {
+            font-size: 16px;
+            color: #666;
+            margin: 5px 0;
+        }
+        
+        .print-header .date-info {
+            font-size: 14px;
+            color: #888;
+            margin-top: 10px;
+        }
+        
+        .search-criteria {
+            background: #f8f9fa;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+        
+        .search-criteria h3 {
+            margin: 0 0 10px 0;
+            font-size: 14px;
+            color: #333;
+        }
+        
+        .search-tag {
+            display: inline-block;
+            background: #28a745;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            margin: 2px;
+            font-size: 11px;
+        }
+        
+        .summary-section {
+            background: #e8f5e8;
+            border: 1px solid #28a745;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            margin-bottom: 5px;
+        }
+        
+        .summary-value {
+            font-size: 16px;
+            font-weight: bold;
+            color: #28a745;
+        }
+        
+        .invoices-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 20px;
+            border: 1px solid #ddd;
+        }
+        
+        .invoices-table th {
+            background: #e8f5e8;
+            border: 1px solid #28a745;
+            padding: 8px;
+            text-align: left;
+            font-weight: bold;
+            font-size: 11px;
+            text-transform: uppercase;
+            color: #155724;
+        }
+        
+        .invoices-table td {
+            border: 1px solid #ddd;
+            padding: 6px 8px;
+            font-size: 11px;
+        }
+        
+        .invoices-table tbody tr:nth-child(even) {
+            background: #f9f9f9;
+        }
+        
+        .invoices-table tbody tr:hover {
+            background: #f0f8ff;
+        }
+        
+        .text-right {
+            text-align: right;
+        }
+        
+        .text-center {
+            text-align: center;
+        }
+        
+        .invoice-items {
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 10px;
+            font-size: 10px;
+        }
+        
+        .items-table th,
+        .items-table td {
+            border: 1px solid #ddd;
+            padding: 4px 6px;
+        }
+        
+        .items-table th {
+            background: #f0f0f0;
+            font-size: 9px;
+            text-transform: uppercase;
+        }
+        
+        .print-footer {
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 1px solid #ddd;
+            text-align: center;
+            font-size: 10px;
+            color: #666;
+        }
+        
+        .print-controls {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+        
+        .print-btn {
+            background: #28a745;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0 5px;
+        }
+        
+        .print-btn:hover {
+            background: #218838;
+        }
+        
+        .back-btn {
+            background: #6c757d;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 0 5px;
+            text-decoration: none;
+            display: inline-block;
+        }
+        
+        .back-btn:hover {
+            background: #545b62;
+        }
+        
+        .cash-badge {
+            background: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <!-- Print Controls (hidden when printing) -->
+    <div class="print-controls print-hidden">
+        <button onclick="window.print()" class="print-btn">🖨️ Print Cash Transactions</button>
+        <a href="{% url 'manager_dashboard' %}?department=cash" class="back-btn">← Back to Cash Dashboard</a>
+    </div>
+
+    <!-- Print Header -->
+    <div class="print-header">
+        <h1>Sales Management System - Cash Department</h1>
+        {% if print_type == 'daily' %}
+            <div class="subtitle">Daily Cash Transactions Report</div>
+            <div class="date-info">{{ print_date|date:'F d, Y (l)' }}</div>
+        {% else %}
+            <div class="subtitle">Cash Search Results Report</div>
+            <div class="date-info">Generated on {{ "now"|date:'F d, Y g:i A' }}</div>
+        {% endif %}
+        <span class="cash-badge">CASH DEPARTMENT</span>
+    </div>
+
+    <!-- Search Criteria (for search results) -->
+    {% if print_type == 'search' and search_params %}
+    <div class="search-criteria">
+        <h3>Search Criteria Applied:</h3>
+        {% if search_params.start_date %}
+            <span class="search-tag">From: {{ search_params.start_date }}</span>
+        {% endif %}
+        {% if search_params.end_date %}
+            <span class="search-tag">To: {{ search_params.end_date }}</span>
+        {% endif %}
+        {% if search_params.customer_name %}
+            <span class="search-tag">Customer: "{{ search_params.customer_name }}"</span>
+        {% endif %}
+        {% if search_params.customer_phone %}
+            <span class="search-tag">Phone: "{{ search_params.customer_phone }}"</span>
+        {% endif %}
+        {% if search_params.invoice_no %}
+            <span class="search-tag">Invoice: "{{ search_params.invoice_no }}"</span>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Summary Section -->
+    <div class="summary-section">
+        <div class="summary-item">
+            <div class="summary-label">Total Transactions</div>
+            <div class="summary-value">{{ invoices|length }}</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">Total Cash Sales</div>
+            <div class="summary-value">₵{{ total_sales|floatformat:2 }}</div>
+        </div>
+        <div class="summary-item">
+            <div class="summary-label">Average Transaction</div>
+            <div class="summary-value">
+                {% if invoices|length > 0 %}
+                    ₵{% widthratio total_sales invoices|length 1 %}
+                {% else %}
+                    ₵0.00
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Cash Transactions Table -->
+    {% if invoices %}
+    <table class="invoices-table">
+        <thead>
+            <tr>
+                <th>Invoice #</th>
+                <th>Customer</th>
+                <th>Phone</th>
+                <th>Date</th>
+                <th>Processing Staff</th>
+                <th class="text-right">Total Amount</th>
+                <th>Transaction Items</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for invoice in invoices %}
+            <tr>
+                <td><strong>{{ invoice.invoice_no }}</strong></td>
+                <td>{{ invoice.customer_name|default:"Walk-in Customer" }}</td>
+                <td>{{ invoice.customer_phone|default:"-" }}</td>
+                <td>{{ invoice.date_of_sale|date:'M d, Y' }}</td>
+                <td>{{ invoice.user.username|title|default:"System" }}</td>
+                <td class="text-right"><strong>₵{{ invoice.total|floatformat:2 }}</strong></td>
+                <td>
+                    <div class="invoice-items">
+                        {% if invoice.items.all %}
+                        <table class="items-table">
+                            <thead>
+                                <tr>
+                                    <th>Service/Product</th>
+                                    <th>Amount</th>
+                                    <th>Rate</th>
+                                    <th>Total</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for item in invoice.items.all %}
+                                <tr>
+                                    <td>{{ item.item }}</td>
+                                    <td class="text-right">₵{{ item.amount|floatformat:2 }}</td>
+                                    <td class="text-right">{{ item.rate|floatformat:4 }}</td>
+                                    <td class="text-right">₵{{ item.total_price|floatformat:2 }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                        {% else %}
+                        <em>No transaction items found</em>
+                        {% endif %}
+                    </div>
+                </td>
+            </tr>
+            {% if invoice.notes %}
+            <tr>
+                <td colspan="7" style="background: #e8f5e8; font-style: italic; color: #155724;">
+                    <strong>Notes:</strong> {{ invoice.notes }}
+                </td>
+            </tr>
+            {% endif %}
+            {% endfor %}
+        </tbody>
+    </table>
+    {% else %}
+    <div style="text-align: center; padding: 40px; color: #666;">
+        <h3>No cash transactions found</h3>
+        {% if print_type == 'daily' %}
+            <p>No cash transactions were processed on {{ print_date|date:'F d, Y' }}</p>
+        {% else %}
+            <p>No cash transactions match the search criteria</p>
+        {% endif %}
+    </div>
+    {% endif %}
+
+    <!-- Print Footer -->
+    <div class="print-footer">
+        <p>
+            Cash Department Report generated on {{ "now"|date:'F d, Y g:i A' }} by {{ request.user.username|title }}
+        </p>
+        {% if print_type == 'daily' %}
+            <p>Daily Cash Transactions Report - {{ print_date|date:'F d, Y' }}</p>
+        {% else %}
+            <p>Cash Search Results Report</p>
+        {% endif %}
+        <p><strong>All transactions shown are cash payments (paid in full)</strong></p>
+    </div>
+</body>
+</html>

@@ -13,7 +13,7 @@
         
         body {
             font-family: 'Courier New', 'Lucida Console', monospace;
-            font-size: 11px;
+            font-size: 14px;
             font-weight: bold; /* Make all text bold for thermal clarity */
             line-height: 1.2;
             margin: 0;
@@ -55,7 +55,6 @@
         /* Transaction Info Section */
         .receipt-info {
             margin: 3mm 0;
-            border-bottom: 1px dashed #000;
             padding-bottom: 3mm;
         }
         
@@ -89,7 +88,7 @@
             padding: 2mm 0;
             margin-bottom: 2mm;
             text-transform: uppercase;
-            font-size: 10px;
+            font-size: 12px;
         }
         
         .items-header-row {
@@ -99,7 +98,6 @@
         
         .item-row {
             padding: 2mm 0;
-            border-bottom: 1px dotted #000;
             margin-bottom: 1mm;
             font-weight: bold;
         }
@@ -115,7 +113,7 @@
         .item-details {
             display: flex;
             justify-content: space-between;
-            font-size: 10px;
+            font-size: 12px;
             font-weight: bold;
         }
         
@@ -186,7 +184,6 @@
         .receipt-footer {
             margin-top: 4mm;
             text-align: center;
-            border-top: 1px dashed #000;
             padding-top: 3mm;
             font-size: 9px;
             font-weight: bold;
@@ -345,7 +342,7 @@
         <div class="thank-you">THANK YOU!</div>
         <div class="footer-line">Computer Generated Receipt</div>
         <div class="footer-line">{{ "now"|date:"M d, Y h:i A" }}</div>
-        <div class="footer-line" style="margin-top: 3mm; border-top: 1px dashed #000; padding-top: 2mm;">
+        <div class="footer-line" style="margin-top: 3mm; padding-top: 2mm;">
             Please keep this receipt<br>
             for your records
         </div>

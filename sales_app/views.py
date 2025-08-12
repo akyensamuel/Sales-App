@@ -822,8 +822,9 @@ def edit_sale(request, sale_id):
 @login_required
 @user_passes_test(is_manager)
 def print_daily_invoices(request):
-    """Print all invoices for a specific date"""
+    """Print all invoices for a specific date (supports both regular and cash departments)"""
     date_str = request.GET.get('date')
+    department = request.GET.get('department', 'regular')
     
     if date_str:
         try:
@@ -833,29 +834,45 @@ def print_daily_invoices(request):
     else:
         print_date = timezone.now().date()
     
-    invoices = Invoice.objects.filter(date_of_sale=print_date).prefetch_related('items').order_by('invoice_no')
+    if department == 'cash':
+        invoices = CashInvoice.objects.filter(date_of_sale=print_date).prefetch_related('items').order_by('invoice_no')
+        template_name = 'sales_app/cash_invoices_print.html'
+    else:
+        invoices = Invoice.objects.filter(date_of_sale=print_date).prefetch_related('items').order_by('invoice_no')
+        template_name = 'sales_app/invoices_print.html'
+    
     total_sales = invoices.aggregate(Sum('total'))['total__sum'] or 0
     
     context = {
         'invoices': invoices,
         'total_sales': total_sales,
         'print_date': print_date,
-        'print_type': 'daily'
+        'print_type': 'daily',
+        'department': department
     }
-    return render(request, 'sales_app/invoices_print.html', context)
+    return render(request, template_name, context)
 
 
 @login_required
 @user_passes_test(is_manager)
 def print_search_results(request):
-    """Print search results from manager dashboard"""
+    """Print search results from manager dashboard (supports both regular and cash departments)"""
     start_date = request.GET.get('start_date')
     end_date = request.GET.get('end_date')
     customer_name = request.GET.get('customer_name', '').strip()
+    customer_phone = request.GET.get('customer_phone', '').strip()
     invoice_no = request.GET.get('invoice_no', '').strip()
+    department = request.GET.get('department', 'regular')
     
-    invoices = Invoice.objects.all().prefetch_related('items').order_by('-date_of_sale')
-    has_search_params = any([start_date, end_date, customer_name, invoice_no])
+    # Select appropriate model based on department
+    if department == 'cash':
+        invoices = CashInvoice.objects.all().prefetch_related('items').order_by('-date_of_sale')
+        template_name = 'sales_app/cash_invoices_print.html'
+    else:
+        invoices = Invoice.objects.all().prefetch_related('items').order_by('-date_of_sale')
+        template_name = 'sales_app/invoices_print.html'
+    
+    has_search_params = any([start_date, end_date, customer_name, customer_phone, invoice_no])
     
     if has_search_params:
         search_conditions = Q()
@@ -869,6 +886,9 @@ def print_search_results(request):
         
         if customer_name:
             search_conditions |= Q(customer_name__icontains=customer_name)
+        
+        if customer_phone:
+            search_conditions |= Q(customer_phone__icontains=customer_phone)
         
         if invoice_no:
             search_conditions |= Q(invoice_no__icontains=invoice_no)
@@ -889,11 +909,13 @@ def print_search_results(request):
             'start_date': start_date,
             'end_date': end_date,
             'customer_name': customer_name,
+            'customer_phone': customer_phone,
             'invoice_no': invoice_no,
         },
-        'print_type': 'search'
+        'print_type': 'search',
+        'department': department
     }
-    return render(request, 'sales_app/invoices_print.html', context)
+    return render(request, template_name, context)
 
 
 # === DEBUG VIEW ===
