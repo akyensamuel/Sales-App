@@ -1,6 +1,42 @@
 # Sales Management System
 
-A comprehensive Django-based sales management system with advanced features for inventory management, sales tracking, reporting, and print functionality. Built with modern UI components and role-based access control.
+A comprehensive Django-based sales and accounting management system with dual department support (Regular & Cash), thermal printing, and advanced reporting capabilities.
+
+## 🏗️ Project Structure (ORGANIZED)
+
+```
+Sales_App_Unitary/
+├── 📁 sales_app/                    # Main sales application
+├── 📁 accounting_app/               # Accounting & financial reporting
+├── 📁 core/                        # Shared utilities & base templates
+├── 📁 sales_management_project/     # Django project settings
+├── 📁 scripts/                     # 🆕 Utility scripts (ORGANIZED)
+│   ├── production/                 #     Production deployment scripts
+│   ├── data_import/               #     CSV import & data processing
+│   └── testing/                   #     Testing & debugging scripts
+├── 📁 docs/                        # 🆕 All documentation & guides (ORGANIZED)
+├── 📁 data/                        # 🆕 CSV files & data imports
+├── 📁 sql/                         # 🆕 SQL scripts & RLS security policies
+├── 📁 tests/                       # Test files
+├── 📁 staticfiles/                 # Collected static files (production)
+└── 📁 node_modules/                # Node.js dependencies
+```
+
+## 🔐 CRITICAL: Security Setup Required
+
+**⚠️ IMPORTANT**: This project now includes Row Level Security (RLS) to protect your database. You MUST complete the security setup:
+
+```bash
+# 1. Create user groups (Admin, Managers, Cashiers)
+python manage.py setup_user_groups
+
+# 2. Assign yourself to Admin group in Django Admin (/admin/)
+
+# 3. Apply database security policies  
+python manage.py enable_rls_security
+```
+
+See `docs/SECURITY_FIX_WALKTHROUGH.md` for complete instructions.
 
 ## 🚀 Key Features
 

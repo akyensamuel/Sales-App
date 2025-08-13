@@ -1,22 +1,46 @@
+# Python
 *.pyc
 __pycache__/
 *.pyo
 *.pyd
 .Python
+*.egg-info/
+dist/
+build/
+
+# Django
 db.sqlite3
-node_modules/
+staticfiles/
+media/
+*.log
+local_settings.py
+
+# Environment
 virtual/
+venv/
 .env
+.env.local
+.env.production
+
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Database
 supabase.txt
+*.sql.backup
+*.db
 
 # Test outputs
 tests/output/
-*.log
 coverage.xml
 htmlcov/
 .coverage
 .pytest_cache/
 .tox/
+*.log
 
 # Documentation outputs
 docs/output/
@@ -28,7 +52,22 @@ docs/**/*.pdf
 .idea/
 *.swp
 *.swo
+*.sublime-*
 
 # OS
 .DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
 Thumbs.db
+
+# Backup files
+*.bak
+*.tmp
+*~
+
+# Large data files (keep in data/ but don't track changes)
+data/*.csv
+!data/README.md
