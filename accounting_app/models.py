@@ -210,3 +210,122 @@ class SalesPersonPerformance(models.Model):
         if not self.performance_rating or self.performance_rating == 'average':
             self.performance_rating = self.calculate_performance_rating()
         super().save(*args, **kwargs)
+
+
+class CashDepartmentPerformance(models.Model):
+    """Track cash department performance metrics separately from regular sales"""
+    user = models.ForeignKey(User, on_delete=models.CASCADE, db_index=True)
+    period_start = models.DateField(db_index=True)
+    period_end = models.DateField(db_index=True)
+    total_cash_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0)
+    total_cash_invoices = models.IntegerField(default=0)
+    total_transactions = models.IntegerField(default=0, help_text="Number of cash sale items")
+    average_transaction_value = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    subscriber_withdrawal_amount = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Special tracking for subscriber withdrawals")
+    subscriber_withdrawal_count = models.IntegerField(default=0)
+    commission_earned = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['user', 'period_start', 'period_end']
+        ordering = ['-total_cash_amount', '-total_cash_invoices']
+        indexes = [
+            models.Index(fields=['user', 'period_start']),
+            models.Index(fields=['total_cash_amount']),
+            models.Index(fields=['subscriber_withdrawal_amount']),
+        ]
+    
+    def __str__(self):
+        return f"Cash Dept - {self.user.get_full_name() or self.user.username} - {self.period_start} to {self.period_end}"
+
+
+class DepartmentFinancialSnapshot(models.Model):
+    """Comprehensive financial snapshot covering both departments"""
+    period_type = models.CharField(max_length=10, choices=[
+        ('daily', 'Daily'),
+        ('weekly', 'Weekly'), 
+        ('monthly', 'Monthly'),
+        ('quarterly', 'Quarterly'),
+        ('yearly', 'Yearly')
+    ], default='monthly')
+    period_start = models.DateField(db_index=True)
+    period_end = models.DateField(db_index=True)
+    
+    # Regular Sales Department
+    regular_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    regular_invoices_count = models.IntegerField(default=0)
+    regular_paid_invoices = models.IntegerField(default=0)
+    regular_outstanding_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    # Cash Department
+    cash_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    cash_invoices_count = models.IntegerField(default=0)
+    cash_transactions_count = models.IntegerField(default=0)
+    subscriber_withdrawals_amount = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    subscriber_withdrawals_count = models.IntegerField(default=0)
+    
+    # Combined Metrics
+    total_revenue = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    total_expenses = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    net_profit = models.DecimalField(max_digits=15, decimal_places=2, default=0)
+    
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['period_type', 'period_start', 'period_end']
+        ordering = ['-period_start', '-period_end']
+        indexes = [
+            models.Index(fields=['period_type', 'period_start']),
+            models.Index(fields=['total_revenue']),
+            models.Index(fields=['period_start', 'period_end']),
+        ]
+    
+    def __str__(self):
+        return f"{self.period_type.title()} - {self.period_start} to {self.period_end}"
+    
+    @property
+    def profit_margin(self):
+        """Calculate overall profit margin percentage"""
+        if self.total_revenue > 0:
+            return (self.net_profit / self.total_revenue) * 100
+        return 0
+    
+    @property
+    def cash_department_ratio(self):
+        """Calculate what percentage of revenue comes from cash department"""
+        if self.total_revenue > 0:
+            return (self.cash_revenue / self.total_revenue) * 100
+        return 0
+
+
+class CashServicePerformance(models.Model):
+    """Track performance of specific cash department services"""
+    service_name = models.CharField(max_length=100, db_index=True)
+    period_start = models.DateField(db_index=True)
+    period_end = models.DateField(db_index=True)
+    total_amount_processed = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Total amount processed (base amount)")
+    total_revenue_generated = models.DecimalField(max_digits=12, decimal_places=2, default=0, help_text="Total revenue from rates")
+    transaction_count = models.IntegerField(default=0)
+    average_transaction_amount = models.DecimalField(max_digits=10, decimal_places=2, default=0)
+    average_rate_applied = models.DecimalField(max_digits=10, decimal_places=4, default=0)
+    last_updated = models.DateTimeField(auto_now=True)
+    
+    class Meta:
+        unique_together = ['service_name', 'period_start', 'period_end']
+        ordering = ['-total_revenue_generated', '-total_amount_processed']
+        indexes = [
+            models.Index(fields=['service_name', 'period_start']),
+            models.Index(fields=['total_revenue_generated']),
+            models.Index(fields=['transaction_count']),
+        ]
+    
+    def __str__(self):
+        return f"{self.service_name} - {self.period_start} to {self.period_end}"
+    
+    @property
+    def effective_rate(self):
+        """Calculate effective rate (revenue/amount processed)"""
+        if self.total_amount_processed > 0:
+            return (self.total_revenue_generated / self.total_amount_processed) * 100
+        return 0

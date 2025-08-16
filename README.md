@@ -24,7 +24,7 @@ Sales_App_Unitary/
 
 ## 🔐 CRITICAL: Security Setup Required
 
-**⚠️ IMPORTANT**: This now includes Row Level Security (RLS) to protect your database. so if you wish to use it complete the security setup:
+**⚠️ IMPORTANT**: This project now includes Row Level Security (RLS) to protect your database. You MUST complete the security setup:
 
 ```bash
 # 1. Create user groups (Admin, Managers, Cashiers)

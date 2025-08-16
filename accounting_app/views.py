@@ -14,9 +14,10 @@ from calendar import monthrange
 
 from .models import (
     FinancialForecast, Expense, ExpenseCategory, ProfitLossSnapshot,
-    TaxSettings, AccountingAuditLog, ProductPerformance, SalesPersonPerformance
+    TaxSettings, AccountingAuditLog, ProductPerformance, SalesPersonPerformance,
+    CashDepartmentPerformance, DepartmentFinancialSnapshot, CashServicePerformance
 )
-from sales_app.models import Invoice, Sale
+from sales_app.models import Invoice, Sale, CashInvoice, CashSale
 from .analytics import AnalyticsEngine
 
 def is_admin(user):
@@ -54,15 +55,24 @@ def accounting_login(request):
 @login_required
 @user_passes_test(is_admin)
 def accounting_dashboard(request):
-    """Main accounting dashboard with financial overview"""
+    """Main accounting dashboard with financial overview including cash department"""
     today = timezone.now().date()
     current_month = today.replace(day=1)
     
-    # Revenue metrics
-    monthly_revenue = Invoice.objects.filter(
+    # Regular Sales Revenue metrics
+    regular_monthly_revenue = Invoice.objects.filter(
         date_of_sale__year=today.year,
         date_of_sale__month=today.month
     ).aggregate(total=Sum('total'))['total'] or 0
+    
+    # Cash Department Revenue metrics
+    cash_monthly_revenue = CashInvoice.objects.filter(
+        date_of_sale__year=today.year,
+        date_of_sale__month=today.month
+    ).aggregate(total=Sum('total'))['total'] or 0
+    
+    # Combined monthly revenue
+    monthly_revenue = regular_monthly_revenue + cash_monthly_revenue
     
     # Expense metrics
     monthly_expenses = Expense.objects.filter(
@@ -70,7 +80,7 @@ def accounting_dashboard(request):
         date__month=today.month
     ).aggregate(total=Sum('amount'))['total'] or 0
     
-    # Outstanding payments
+    # Outstanding payments (only regular invoices, cash is always paid)
     outstanding_invoices = Invoice.objects.filter(
         payment_status__in=['unpaid', 'partial', 'overdue']
     ).aggregate(
@@ -91,25 +101,54 @@ def accounting_dashboard(request):
     net_profit = monthly_revenue - monthly_expenses
     profit_margin = (net_profit / monthly_revenue * 100) if monthly_revenue > 0 else 0
     
-    # Get or create monthly snapshot
-    snapshot, created = ProfitLossSnapshot.objects.get_or_create(
-        month=current_month,
+    # Department breakdown for current month
+    cash_department_percentage = (cash_monthly_revenue / monthly_revenue * 100) if monthly_revenue > 0 else 0
+    regular_department_percentage = (regular_monthly_revenue / monthly_revenue * 100) if monthly_revenue > 0 else 0
+    
+    # Cash department specific metrics
+    cash_invoices_count = CashInvoice.objects.filter(
+        date_of_sale__year=today.year,
+        date_of_sale__month=today.month
+    ).count()
+    
+    cash_transactions_count = CashSale.objects.filter(
+        invoice__date_of_sale__year=today.year,
+        invoice__date_of_sale__month=today.month
+    ).count()
+    
+    # Get or create monthly snapshot with combined data
+    snapshot, created = DepartmentFinancialSnapshot.objects.get_or_create(
+        period_type='monthly',
+        period_start=current_month,
+        period_end=current_month.replace(day=monthrange(current_month.year, current_month.month)[1]),
         defaults={
+            'regular_revenue': regular_monthly_revenue,
+            'cash_revenue': cash_monthly_revenue,
             'total_revenue': monthly_revenue,
             'total_expenses': monthly_expenses,
-            'net_profit': net_profit
+            'net_profit': net_profit,
+            'regular_outstanding_amount': outstanding_amount,
+            'cash_invoices_count': cash_invoices_count,
+            'cash_transactions_count': cash_transactions_count,
         }
     )
     
     if not created:
         # Update existing snapshot
+        snapshot.regular_revenue = regular_monthly_revenue
+        snapshot.cash_revenue = cash_monthly_revenue
         snapshot.total_revenue = monthly_revenue
         snapshot.total_expenses = monthly_expenses
         snapshot.net_profit = net_profit
+        snapshot.regular_outstanding_amount = outstanding_amount
+        snapshot.cash_invoices_count = cash_invoices_count
+        snapshot.cash_transactions_count = cash_transactions_count
         snapshot.save()
-    
+
     context = {
         'monthly_revenue': monthly_revenue,
+        'regular_monthly_revenue': regular_monthly_revenue,
+        'cash_monthly_revenue': cash_monthly_revenue,
         'monthly_expenses': monthly_expenses,
         'net_profit': net_profit,
         'profit_margin': profit_margin,
@@ -117,9 +156,13 @@ def accounting_dashboard(request):
         'outstanding_count': outstanding_invoices['count'] or 0,
         'recent_expenses': recent_expenses,
         'current_month': current_month.strftime('%B %Y'),
+        'cash_department_percentage': cash_department_percentage,
+        'regular_department_percentage': regular_department_percentage,
+        'cash_invoices_count': cash_invoices_count,
+        'cash_transactions_count': cash_transactions_count,
     }
     
-    log_audit_action(request.user, 'view', 'AccountingDashboard', details='Accessed main dashboard')
+    log_audit_action(request.user, 'view', 'AccountingDashboard', details='Accessed main dashboard with cash department data')
     return render(request, 'accounting_app/dashboard.html', context)
 
 @login_required
@@ -641,43 +684,173 @@ def analytics_api(request):
         elif data_type == 'products':
             date_ranges = AnalyticsEngine.get_date_ranges()
             start_date, end_date = date_ranges.get(period, date_ranges['this_month'])
-            products = AnalyticsEngine.calculate_product_performance(start_date, end_date, update_db=False)
-            data = {'products': products[:10]}  # Top 10
-        elif data_type == 'salespeople':
+            data = AnalyticsEngine.calculate_product_performance(start_date, end_date, update_db=False)
+        elif data_type == 'cash_services':
             date_ranges = AnalyticsEngine.get_date_ranges()
             start_date, end_date = date_ranges.get(period, date_ranges['this_month'])
-            salespeople = AnalyticsEngine.calculate_salesperson_performance(start_date, end_date, update_db=False)
-            # Convert User objects to serializable format
-            serializable_data = []
-            for sp in salespeople[:10]:
-                sp_copy = sp.copy()
-                sp_copy['user'] = {
-                    'id': sp['user'].id,
-                    'username': sp['user'].username,
-                    'full_name': sp['user'].get_full_name() or sp['user'].username
-                }
-                # Convert Decimal to float for JSON serialization
-                for key, value in sp_copy.items():
-                    if isinstance(value, Decimal):
-                        sp_copy[key] = float(value)
-                serializable_data.append(sp_copy)
-            data = {'salespeople': serializable_data}
+            data = AnalyticsEngine.calculate_cash_service_performance(start_date, end_date, update_db=False)
         else:
-            return JsonResponse({'error': 'Invalid data type'}, status=400)
+            data = {'error': 'Invalid data type'}
         
-        # Convert Decimal values to float for JSON serialization
-        def decimal_to_float(obj):
-            if isinstance(obj, dict):
-                return {k: decimal_to_float(v) for k, v in obj.items()}
-            elif isinstance(obj, list):
-                return [decimal_to_float(item) for item in obj]
-            elif isinstance(obj, Decimal):
-                return float(obj)
-            return obj
-        
-        data = decimal_to_float(data)
-        
-        return JsonResponse(data)
-    
+        return JsonResponse(data, safe=False)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=500)
+
+
+@login_required
+@user_passes_test(is_admin)
+def weekly_summary(request):
+    """Weekly summary view across all departments"""
+    try:
+        weekly_data = AnalyticsEngine.get_weekly_summary()
+        
+        weekly_snapshot = weekly_data['weekly_snapshot']
+        daily_summaries = weekly_data['daily_summaries']
+        
+        # Calculate week-over-week comparison
+        previous_week_start = weekly_data['week_start'] - timedelta(days=7)
+        previous_week_end = weekly_data['week_end'] - timedelta(days=7)
+        
+        try:
+            previous_week_snapshot = DepartmentFinancialSnapshot.objects.get(
+                period_type='weekly',
+                period_start=previous_week_start,
+                period_end=previous_week_end
+            )
+            
+            # Calculate percentage changes
+            revenue_change = 0
+            if previous_week_snapshot.total_revenue > 0:
+                revenue_change = ((weekly_snapshot.total_revenue - previous_week_snapshot.total_revenue) / 
+                                previous_week_snapshot.total_revenue) * 100
+            
+            profit_change = 0
+            if previous_week_snapshot.net_profit != 0:
+                profit_change = ((weekly_snapshot.net_profit - previous_week_snapshot.net_profit) / 
+                               abs(previous_week_snapshot.net_profit)) * 100
+            
+        except DepartmentFinancialSnapshot.DoesNotExist:
+            previous_week_snapshot = None
+            revenue_change = 0
+            profit_change = 0
+        
+        # Get top performing products for the week
+        top_products = AnalyticsEngine.calculate_product_performance(
+            weekly_data['week_start'], 
+            weekly_data['week_end'], 
+            update_db=False
+        )[:5]
+        
+        # Get top performing cash services for the week
+        top_cash_services = AnalyticsEngine.calculate_cash_service_performance(
+            weekly_data['week_start'], 
+            weekly_data['week_end'], 
+            update_db=False
+        )[:5]
+        
+        # Staff performance for the week
+        staff_performance = AnalyticsEngine.calculate_salesperson_performance(
+            weekly_data['week_start'], 
+            weekly_data['week_end'], 
+            update_db=False
+        )
+        
+        cash_staff_performance = AnalyticsEngine.calculate_cash_department_performance(
+            weekly_data['week_start'], 
+            weekly_data['week_end'], 
+            update_db=False
+        )
+        
+        context = {
+            'weekly_snapshot': weekly_snapshot,
+            'daily_summaries': daily_summaries,
+            'previous_week_snapshot': previous_week_snapshot,
+            'revenue_change': revenue_change,
+            'profit_change': profit_change,
+            'week_start': weekly_data['week_start'],
+            'week_end': weekly_data['week_end'],
+            'top_products': top_products,
+            'top_cash_services': top_cash_services,
+            'staff_performance': staff_performance,
+            'cash_staff_performance': cash_staff_performance,
+        }
+        
+        log_audit_action(
+            request.user, 
+            'view', 
+            'WeeklySummary', 
+            details=f'Viewed weekly summary for {weekly_data["week_start"]} to {weekly_data["week_end"]}'
+        )
+        
+        return render(request, 'accounting_app/weekly_summary.html', context)
+        
+    except Exception as e:
+        messages.error(request, f'Error generating weekly summary: {str(e)}')
+        return redirect('accounting_dashboard')
+
+
+@login_required
+@user_passes_test(is_admin)
+def cash_department_analytics(request):
+    """Cash department specific analytics and reporting"""
+    today = timezone.now().date()
+    
+    # Get current month cash department data
+    current_month = today.replace(day=1)
+    month_end = current_month.replace(day=monthrange(current_month.year, current_month.month)[1])
+    
+    # Cash department monthly metrics
+    cash_monthly_data = AnalyticsEngine.create_department_financial_snapshot(
+        'monthly', current_month, month_end
+    )
+    
+    # Cash service performance for current month
+    cash_services = AnalyticsEngine.calculate_cash_service_performance(
+        current_month, month_end, update_db=False
+    )
+    
+    # Cash staff performance for current month
+    cash_staff = AnalyticsEngine.calculate_cash_department_performance(
+        current_month, month_end, update_db=False
+    )
+    
+    # Get last 6 months cash department trends
+    monthly_trends = []
+    for i in range(6):
+        trend_month = (current_month.replace(day=1) - timedelta(days=32*i)).replace(day=1)
+        trend_month_end = trend_month.replace(day=monthrange(trend_month.year, trend_month.month)[1])
+        
+        try:
+            trend_snapshot = DepartmentFinancialSnapshot.objects.get(
+                period_type='monthly',
+                period_start=trend_month,
+                period_end=trend_month_end
+            )
+        except DepartmentFinancialSnapshot.DoesNotExist:
+            trend_snapshot = AnalyticsEngine.create_department_financial_snapshot(
+                'monthly', trend_month, trend_month_end
+            )
+        
+        monthly_trends.append({
+            'month': trend_month,
+            'snapshot': trend_snapshot
+        })
+    
+    monthly_trends.reverse()  # Show oldest to newest
+    
+    # Calculate average transaction value
+    average_transaction_value = 0
+    if cash_monthly_data.cash_transactions_count > 0:
+        average_transaction_value = cash_monthly_data.cash_revenue / cash_monthly_data.cash_transactions_count
+    
+    context = {
+        'cash_monthly_data': cash_monthly_data,
+        'cash_services': cash_services,
+        'cash_staff': cash_staff,
+        'monthly_trends': monthly_trends,
+        'current_month': current_month.strftime('%B %Y'),
+        'average_transaction_value': average_transaction_value,
+    }
+    
+    log_audit_action(request.user, 'view', 'CashDepartmentAnalytics', details='Viewed cash department analytics')
+    return render(request, 'accounting_app/cash_analytics.html', context)

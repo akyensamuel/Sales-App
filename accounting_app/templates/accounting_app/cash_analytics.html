@@ -1,0 +1,244 @@
+{% extends 'accounting_app/base.html' %}
+
+{% block page_title %}Cash Department Analytics{% endblock %}
+{% block nav_icon %}fas fa-money-bill-wave{% endblock %}
+
+{% block accounting_content %}
+    <!-- Page Header -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-6">
+        <div class="flex items-center justify-between">
+            <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <i class="fas fa-money-bill-wave mr-3 text-purple-600 dark:text-purple-400"></i>
+                    Cash Department Analytics
+                </h2>
+                <p class="text-gray-600 dark:text-gray-400">{{ current_month }} Performance Overview</p>
+            </div>
+            <div class="flex space-x-3">
+                <a href="{% url 'weekly_summary' %}" 
+                   class="px-4 py-2 bg-emerald-100 dark:bg-emerald-900/70 hover:bg-emerald-200 dark:hover:bg-emerald-900 text-emerald-700 dark:text-emerald-300 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-calendar-week mr-2"></i>Weekly View
+                </a>
+                <a href="{% url 'accounting_dashboard' %}" 
+                   class="px-4 py-2 bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300 rounded-lg transition-colors duration-200">
+                    <i class="fas fa-arrow-left mr-2"></i>Back to Dashboard
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Monthly Overview Cards -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Monthly Revenue -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Monthly Revenue</p>
+                    <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">₵{{ cash_monthly_data.cash_revenue|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ cash_monthly_data.cash_department_ratio|floatformat:1 }}% of total business</p>
+                </div>
+                <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
+                    <i class="fas fa-dollar-sign text-purple-600 dark:text-purple-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Total Invoices -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-indigo-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Invoices</p>
+                    <p class="text-2xl font-bold text-indigo-600 dark:text-indigo-400">{{ cash_monthly_data.cash_invoices_count }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ cash_monthly_data.cash_transactions_count }} transactions</p>
+                </div>
+                <div class="p-3 bg-indigo-100 dark:bg-indigo-900 rounded-full">
+                    <i class="fas fa-file-invoice text-indigo-600 dark:text-indigo-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Subscriber Withdrawals -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-amber-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Subscriber Withdrawals</p>
+                    <p class="text-2xl font-bold text-amber-600 dark:text-amber-400">₵{{ cash_monthly_data.subscriber_withdrawals_amount|floatformat:2 }}</p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">{{ cash_monthly_data.subscriber_withdrawals_count }} withdrawals</p>
+                </div>
+                <div class="p-3 bg-amber-100 dark:bg-amber-900 rounded-full">
+                    <i class="fas fa-hand-holding-usd text-amber-600 dark:text-amber-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Average Transaction -->
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-teal-500">
+            <div class="flex items-center justify-between">
+                <div>
+                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Avg. Transaction</p>
+                    <p class="text-2xl font-bold text-teal-600 dark:text-teal-400">
+                        ₵{{ average_transaction_value|floatformat:2 }}
+                    </p>
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Per transaction</p>
+                </div>
+                <div class="p-3 bg-teal-100 dark:bg-teal-900 rounded-full">
+                    <i class="fas fa-calculator text-teal-600 dark:text-teal-400 text-xl"></i>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Service Performance -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-chart-bar mr-2 text-gray-600 dark:text-gray-400"></i>Service Performance - {{ current_month }}
+        </h3>
+        {% if cash_services %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Service</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Transactions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Amount Processed</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Revenue Generated</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Effective Rate</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Avg. Amount</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for service in cash_services %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ service.service_name }}</p>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                {{ service.transaction_count }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-medium">
+                                ₵{{ service.total_amount_processed|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 font-bold">
+                                ₵{{ service.total_revenue_generated|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-purple-600 dark:text-purple-400 font-medium">
+                                {{ service.effective_rate|floatformat:4 }}%
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                ₵{{ service.average_transaction_amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-inbox text-4xl mb-4"></i>
+                <p>No cash service data available for {{ current_month }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Staff Performance -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 mb-8">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-users mr-2 text-gray-600 dark:text-gray-400"></i>Cash Department Staff Performance - {{ current_month }}
+        </h3>
+        {% if cash_staff %}
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for staff in cash_staff %}
+                <div class="bg-gray-50 dark:bg-gray-700 rounded-lg p-4 border border-gray-200 dark:border-gray-600">
+                    <div class="flex items-center justify-between mb-3">
+                        <h4 class="font-medium text-gray-900 dark:text-white">{{ staff.user.get_full_name|default:staff.user.username }}</h4>
+                        <div class="w-8 h-8 bg-purple-100 dark:bg-purple-900 rounded-full flex items-center justify-center">
+                            <i class="fas fa-user text-purple-600 dark:text-purple-400"></i>
+                        </div>
+                    </div>
+                    <div class="space-y-2">
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Revenue:</span>
+                            <span class="text-sm font-bold text-purple-600 dark:text-purple-400">₵{{ staff.total_cash_amount|floatformat:2 }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Invoices:</span>
+                            <span class="text-sm text-gray-900 dark:text-white">{{ staff.total_cash_invoices }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Transactions:</span>
+                            <span class="text-sm text-gray-900 dark:text-white">{{ staff.total_transactions }}</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Avg. Value:</span>
+                            <span class="text-sm text-teal-600 dark:text-teal-400">₵{{ staff.average_transaction_value|floatformat:2 }}</span>
+                        </div>
+                        {% if staff.subscriber_withdrawal_amount > 0 %}
+                        <div class="flex justify-between border-t border-gray-200 dark:border-gray-600 pt-2">
+                            <span class="text-sm text-gray-600 dark:text-gray-400">Sub. Withdrawals:</span>
+                            <span class="text-sm text-amber-600 dark:text-amber-400 font-medium">₵{{ staff.subscriber_withdrawal_amount|floatformat:2 }}</span>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-users text-4xl mb-4"></i>
+                <p>No staff performance data available for {{ current_month }}</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <!-- Monthly Trends -->
+    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <i class="fas fa-chart-line mr-2 text-gray-600 dark:text-gray-400"></i>6-Month Cash Department Trends
+        </h3>
+        {% if monthly_trends %}
+            <div class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                    <thead class="bg-gray-50 dark:bg-gray-700">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Month</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Cash Revenue</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Invoices</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Transactions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">% of Total Business</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase tracking-wider">Sub. Withdrawals</th>
+                        </tr>
+                    </thead>
+                    <tbody class="bg-white dark:bg-gray-800 divide-y divide-gray-200 dark:divide-gray-700">
+                        {% for trend in monthly_trends %}
+                        <tr class="hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ trend.month|date:"M Y" }}</p>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-purple-600 dark:text-purple-400 font-bold">
+                                ₵{{ trend.snapshot.cash_revenue|floatformat:2 }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                {{ trend.snapshot.cash_invoices_count }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-400">
+                                {{ trend.snapshot.cash_transactions_count }}
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-medium">
+                                {{ trend.snapshot.cash_department_ratio|floatformat:1 }}%
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-amber-600 dark:text-amber-400">
+                                ₵{{ trend.snapshot.subscriber_withdrawals_amount|floatformat:2 }}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        {% else %}
+            <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <i class="fas fa-chart-line text-4xl mb-4"></i>
+                <p>No historical data available</p>
+            </div>
+        {% endif %}
+    </div>
+{% endblock %}
