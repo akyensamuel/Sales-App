@@ -48,7 +48,7 @@
                     <div class="flex items-center mt-1">
                         <span class="text-xs text-blue-600 dark:text-blue-400">Regular: ₵{{ weekly_snapshot.regular_revenue|floatformat:2 }}</span>
                         <span class="mx-1 text-gray-400">|</span>
-                        <span class="text-xs text-purple-600 dark:text-purple-400">Cash: ₵{{ weekly_snapshot.cash_revenue|floatformat:2 }}</span>
+                        <span class="text-xs text-magenta-600 dark:text-magenta-400">Cash: ₵{{ weekly_snapshot.cash_revenue|floatformat:2 }}</span>
                     </div>
                 </div>
                 <div class="p-3 bg-emerald-100 dark:bg-emerald-900 rounded-full">
@@ -87,15 +87,15 @@
         </div>
 
         <!-- Cash Department Ratio -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-purple-500">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-magenta-500">
             <div class="flex items-center justify-between">
                 <div>
                     <p class="text-sm font-medium text-gray-600 dark:text-gray-400">Cash Dept. Share</p>
-                    <p class="text-2xl font-bold text-purple-600 dark:text-purple-400">{{ weekly_snapshot.cash_department_ratio|floatformat:1 }}%</p>
+                    <p class="text-2xl font-bold text-magenta-600 dark:text-magenta-400">{{ weekly_snapshot.cash_department_ratio|floatformat:1 }}%</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ weekly_snapshot.cash_transactions_count }} transactions</p>
                 </div>
-                <div class="p-3 bg-purple-100 dark:bg-purple-900 rounded-full">
-                    <i class="fas fa-money-bill-wave text-purple-600 dark:text-purple-400 text-xl"></i>
+                <div class="p-3 bg-magenta-100 dark:bg-magenta-900 rounded-full">
+                    <i class="fas fa-money-bill-wave text-magenta-600 dark:text-magenta-400 text-xl"></i>
                 </div>
             </div>
         </div>
@@ -130,7 +130,7 @@
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-blue-600 dark:text-blue-400 font-medium">
                             ₵{{ daily.snapshot.regular_revenue|floatformat:2 }}
                         </td>
-                        <td class="px-6 py-4 whitespace-nowrap text-sm text-purple-600 dark:text-purple-400 font-medium">
+                        <td class="px-6 py-4 whitespace-nowrap text-sm text-magenta-600 dark:text-magenta-400 font-medium">
                             ₵{{ daily.snapshot.cash_revenue|floatformat:2 }}
                         </td>
                         <td class="px-6 py-4 whitespace-nowrap text-sm text-green-600 dark:text-green-400 font-bold">
@@ -179,7 +179,7 @@
         <!-- Top Cash Services -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                <i class="fas fa-money-bill-wave mr-2 text-purple-500"></i>Top Cash Services
+                <i class="fas fa-money-bill-wave mr-2 text-magenta-500"></i>Top Cash Services
             </h3>
             {% if top_cash_services %}
                 <div class="space-y-3">
@@ -190,7 +190,7 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400">₵{{ service.total_amount_processed|floatformat:2 }} processed</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold text-purple-600 dark:text-purple-400">₵{{ service.total_revenue_generated|floatformat:2 }}</p>
+                            <p class="font-bold text-magenta-600 dark:text-magenta-400">₵{{ service.total_revenue_generated|floatformat:2 }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ service.transaction_count }} transactions</p>
                         </div>
                     </div>
@@ -232,7 +232,7 @@
         <!-- Cash Department Staff -->
         <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                <i class="fas fa-money-check mr-2 text-purple-500"></i>Cash Department Staff
+                <i class="fas fa-money-check mr-2 text-magenta-500"></i>Cash Department Staff
             </h3>
             {% if cash_staff_performance %}
                 <div class="space-y-3">
@@ -243,7 +243,7 @@
                             <p class="text-sm text-gray-600 dark:text-gray-400">{{ staff.total_transactions }} transactions</p>
                         </div>
                         <div class="text-right">
-                            <p class="font-bold text-purple-600 dark:text-purple-400">₵{{ staff.total_cash_amount|floatformat:2 }}</p>
+                            <p class="font-bold text-magenta-600 dark:text-magenta-400">₵{{ staff.total_cash_amount|floatformat:2 }}</p>
                             <p class="text-xs text-gray-500 dark:text-gray-400">{{ staff.total_cash_invoices }} invoices</p>
                         </div>
                     </div>
