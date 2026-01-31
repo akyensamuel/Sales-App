@@ -2,6 +2,8 @@
 {% load static %}
 <html class>
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Sales Management System</title>
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <script>
@@ -20,9 +22,11 @@
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
    {% include 'core/navbar.html'  %}
-    <main class="container mx-auto px-4 py-8">
-        {% block content %}
-        {% endblock %}
+    <main class="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
+        <div class="container mx-auto max-w-7xl">
+            {% block content %}
+            {% endblock %}
+        </div>
     </main>
     
     <!-- Extra JavaScript block for child templates -->
