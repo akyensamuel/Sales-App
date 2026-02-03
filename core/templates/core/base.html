@@ -10,7 +10,7 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <meta name="apple-mobile-web-app-title" content="Sales App">
     <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23d946ef' width='192' height='192'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>SA</text></svg>">
-    <link rel="manifest" href="/manifest.json">>
+    <link rel="manifest" href="/manifest.json">
     <title>Sales Management System</title>
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <script>
@@ -28,7 +28,10 @@
     </script>
 </head>
 <body class="bg-white text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
-   {% include 'core/navbar.html'  %}
+   <!-- Pass user groups to navbar for intelligent navigation -->
+   {% load group_filters %}
+   {% include 'core/navbar.html' %}
+    
     <main class="w-full px-3 sm:px-4 md:px-6 py-4 sm:py-6 md:py-8">
         <div class="container mx-auto max-w-7xl">
             {% block content %}
@@ -38,6 +41,9 @@
     
     <!-- Extra JavaScript block for child templates -->
     {% block extra_js %}{% endblock %}
+    
+    <!-- Include Navigation Handler for Smart Route Navigation -->
+    {% include 'core/navigation_handler.html' %}
     
     <!-- PWA Install Button -->
     <div id="installPrompt" class="hidden fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 bg-gradient-to-r from-magenta-600 to-magenta-700 text-white rounded-lg shadow-lg p-4 z-50 animate-slideUp">

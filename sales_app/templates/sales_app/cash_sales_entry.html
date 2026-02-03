@@ -6,6 +6,7 @@
     <h2 class="text-xl sm:text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">New Cash Transaction</h2>
     <form method="post" id="cash-sales-form">
         {% csrf_token %}
+        <input type="hidden" id="button_pressed" name="button_pressed" value="">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-6">
             <div>
                 <label class="block mb-2 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Invoice No</label>
@@ -90,8 +91,8 @@
         </div>
 
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <button type="submit" name="save_print" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-all">Save and Print</button>
-            <button type="submit" name="save" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 transition-all">Save</button>
+            <button type="submit" name="save_print" value="1" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-all">Save and Print</button>
+            <button type="submit" name="save" value="1" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 transition-all">Save</button>
         </div>
     </form>
 </div>
@@ -453,7 +454,17 @@ $(document).ready(function() {
     });
 
     // Form submission handler
-    document.getElementById('cash-sales-form').addEventListener('submit', function() {
+    document.getElementById('cash-sales-form').addEventListener('submit', function(e) {
+        console.log('Cash form submission started...');
+        console.log('Submitter button:', e.submitter);
+        console.log('Submitter name:', e.submitter?.name);
+        
+        const submitButton = e.submitter || document.querySelector('button[type="submit"]');
+        if (submitButton) {
+            // Store which button was clicked
+            document.getElementById('button_pressed').value = submitButton.name || '';
+            console.log('Set button_pressed to:', submitButton.name);
+        }
         localStorage.removeItem(STORAGE_KEY);
     });
 

@@ -368,6 +368,13 @@ def sales_entry(request):
     
     if request.method == 'POST':
         try:
+            # Debug: Log complete POST data
+            logger.debug(f"=== SALES ENTRY POST REQUEST ===")
+            logger.debug(f"Complete POST data keys: {list(request.POST.keys())}")
+            all_post_items = [(k, v) for k, v in request.POST.items()]
+            logger.info(f"button_pressed value: '{request.POST.get('button_pressed', 'NOT_FOUND')}'")
+            logger.info(f"BUTTON CHECK - save_print in POST: {'save_print' in request.POST}, save in POST: {'save' in request.POST}")
+            
             invoice_form = InvoiceForm(request.POST)
             formset = SaleFormSet(request.POST)
             
@@ -416,15 +423,36 @@ def sales_entry(request):
                                 
                                 messages.success(request, f'Invoice {invoice.invoice_no} saved successfully!')
                                 
-                                if 'save_print' in request.POST:
-                                    logger.debug(f"Rendering receipt for invoice {invoice.invoice_no}")
+                                # Check which button was clicked
+                                button_pressed = request.POST.get('button_pressed', '')
+                                save_print_button = request.POST.get('save_print')
+                                
+                                # Debug: Log what we're checking
+                                logger.debug(f"POST keys at print check: {list(request.POST.keys())}")
+                                logger.debug(f"button_pressed value: '{button_pressed}'")
+                                logger.debug(f"save_print value: {save_print_button}")
+                                logger.debug(f"Checking for 'save_print': {'save_print' in request.POST}")
+                                logger.debug(f"POST.get('save_print'): {request.POST.get('save_print', 'NOT_FOUND')}")
+                                logger.debug(f"POST.get('save'): {request.POST.get('save', 'NOT_FOUND')}")
+                                
+                                # Check if save_print button was clicked (multiple checks for robustness)
+                                print_requested = (
+                                    'save_print' in request.POST or 
+                                    button_pressed == 'save_print' or
+                                    request.POST.get('save_print') is not None
+                                )
+                                logger.info(f"Print requested: {print_requested}")
+                                
+                                if print_requested:
+                                    logger.info(f"PRINT TRIGGERED: Rendering receipt for invoice {invoice.invoice_no}")
                                     return render(request, 'sales_app/receipt_print.html', {
                                         'invoice': invoice,
                                         'items': invoice.items.all(),
                                     })
-                                
-                                logger.debug("Redirecting to sales entry after successful save")
-                                return redirect('sales_entry')
+                                else:
+                                    logger.info(f"SAVE ONLY: Redirecting to sales entry")
+                                    logger.debug("Redirecting to sales entry after successful save")
+                                    return redirect('sales_entry')
                                 
                         except Exception as save_error:
                             logger.error(f"Database transaction failed: {str(save_error)}")
@@ -1066,7 +1094,16 @@ def cash_sales_entry(request):
                             
                             messages.success(request, f'Cash Transaction {invoice.invoice_no} saved successfully!')
                             
-                            if 'save_print' in request.POST:
+                            # Check which button was clicked
+                            button_pressed = request.POST.get('button_pressed', '')
+                            
+                            # Check if save_print button was clicked (multiple checks for robustness)
+                            print_requested = (
+                                'save_print' in request.POST or 
+                                button_pressed == 'save_print'
+                            )
+                            
+                            if print_requested:
                                 logger.debug(f"Rendering cash receipt for invoice {invoice.invoice_no}")
                                 return render(request, 'sales_app/cash_receipt_print.html', {
                                     'invoice': invoice,

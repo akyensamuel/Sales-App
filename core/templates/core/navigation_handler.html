@@ -1,0 +1,181 @@
+{# Navigation Handler - Intelligent routing based on user groups and main routes only #}
+<script>
+    /**
+     * Main route navigation system
+     * Tracks navigation through main routes only, skips detail/print pages
+     * Respects user groups for appropriate redirects
+     */
+    
+    // Define main routes (not detail pages, not print pages)
+    const MAIN_ROUTES = {
+        'sales_entry': { path: '/sales/sales_entry/', group_required: null },
+        'cash_sales_entry': { path: '/sales/cash/sales_entry/', group_required: null },
+        'manager_dashboard': { path: '/sales/manager_dashboard/', group_required: ['Admin', 'Managers'] },
+        'cash_products': { path: '/sales/cash/products/', group_required: null },
+        'products': { path: '/sales/products/', group_required: null },
+        'accounting_dashboard': { path: '/accounting/', group_required: ['Admin'] },
+        'home': { path: '/sales/', group_required: null },
+    };
+
+    // User groups (passed from Django template)
+    let userGroups = [];
+    let isAuthenticated = false;
+
+    // Initialize navigation system
+    function initializeNavigation() {
+        // Get user groups from data attributes
+        const navElement = document.querySelector('[data-user-groups]');
+        if (navElement) {
+            userGroups = navElement.dataset.userGroups ? JSON.parse(navElement.dataset.userGroups) : [];
+            isAuthenticated = navElement.dataset.isAuthenticated === 'true';
+        }
+
+        // Initialize navigation stack from sessionStorage
+        initializeNavigationStack();
+    }
+
+    // Initialize or retrieve navigation stack from sessionStorage
+    function initializeNavigationStack() {
+        let stack = sessionStorage.getItem('mainRouteStack');
+        if (!stack) {
+            stack = [];
+        } else {
+            try {
+                stack = JSON.parse(stack);
+            } catch (e) {
+                stack = [];
+            }
+        }
+
+        // Always add current route if it's a main route
+        const currentRoute = getCurrentMainRoute();
+        if (currentRoute) {
+            // Avoid duplicates - don't add if it's the same as the last route
+            if (stack.length === 0 || stack[stack.length - 1] !== currentRoute) {
+                stack.push(currentRoute);
+            }
+            
+            // Keep only last 10 routes to prevent excessive history
+            if (stack.length > 10) {
+                stack.shift();
+            }
+
+            sessionStorage.setItem('mainRouteStack', JSON.stringify(stack));
+        }
+    }
+
+    // Get current main route from URL
+    function getCurrentMainRoute() {
+        const pathName = window.location.pathname;
+        
+        // Check each main route - match if path contains the route pattern
+        for (const [routeName, routeConfig] of Object.entries(MAIN_ROUTES)) {
+            const routePath = routeConfig.path;
+            
+            // Check if current path matches this route
+            // Handle exact matches and sub-routes
+            if (pathName === routePath || pathName.startsWith(routePath)) {
+                // Don't match if it's a detail page (has trailing numbers/id)
+                // e.g., /sales/sales_entry/123/ should not match sales_entry route
+                const remainingPath = pathName.substring(routePath.length);
+                
+                // If there's remaining path, check if it's a detail route (contains ID numbers)
+                if (remainingPath && /^\d+/.test(remainingPath.replace(/^\/?/, ''))) {
+                    // This is a detail page (has ID), skip this route
+                    continue;
+                }
+                
+                // Verify user has access to this route
+                if (canAccessRoute(routeName)) {
+                    return routeName;
+                }
+            }
+        }
+        
+        return null;
+    }
+
+    // Check if user can access a route
+    function canAccessRoute(routeName) {
+        const routeConfig = MAIN_ROUTES[routeName];
+        
+        // Check if route requires authentication
+        if (!isAuthenticated && routeName !== 'home') {
+            return false;
+        }
+
+        // Check group requirements
+        if (routeConfig.group_required && routeConfig.group_required.length > 0) {
+            return userGroups.some(group => routeConfig.group_required.includes(group));
+        }
+
+        return true;
+    }
+
+    // Handle back navigation
+    function handleBackNavigation() {
+        if (!isAuthenticated) {
+            window.location.href = '/';
+            return;
+        }
+
+        let stack = JSON.parse(sessionStorage.getItem('mainRouteStack') || '[]');
+        
+        // Remove current route
+        if (stack.length > 0) {
+            stack.pop();
+        }
+
+        // Find the previous accessible route
+        let targetRoute = null;
+        while (stack.length > 0) {
+            const route = stack[stack.length - 1];
+            if (canAccessRoute(route)) {
+                targetRoute = route;
+                break;
+            }
+            stack.pop();
+        }
+
+        // Update stack
+        sessionStorage.setItem('mainRouteStack', JSON.stringify(stack));
+
+        // Navigate to target route or dashboard
+        if (targetRoute && MAIN_ROUTES[targetRoute]) {
+            window.location.href = MAIN_ROUTES[targetRoute].path;
+        } else {
+            // Fallback based on user group
+            navigateToDefaultDashboard();
+        }
+    }
+
+    // Handle forward navigation
+    function handleForwardNavigation() {
+        // Browser forward only works within browser history
+        // For our route-based forward, we'll just use browser history
+        window.history.forward();
+    }
+
+    // Navigate to appropriate default dashboard based on user group
+    function navigateToDefaultDashboard() {
+        if (!isAuthenticated) {
+            window.location.href = '/';
+            return;
+        }
+
+        if (userGroups.includes('Admin') || userGroups.includes('Managers')) {
+            window.location.href = MAIN_ROUTES.manager_dashboard.path;
+        } else {
+            window.location.href = MAIN_ROUTES.sales_entry.path;
+        }
+    }
+
+    // Override default browser back button behavior
+    window.addEventListener('popstate', function(event) {
+        // Don't override, just let browser history work for forward/back
+        // The navigation handler will manage main route navigation
+    });
+
+    // Initialize on page load
+    document.addEventListener('DOMContentLoaded', initializeNavigation);
+</script>

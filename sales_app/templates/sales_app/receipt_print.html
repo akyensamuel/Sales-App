@@ -12,12 +12,12 @@
         body {
             font-family: 'Courier New', 'Lucida Console', monospace;
             font-size: 11px;
-            font-weight: bold; /* Make all text bold for thermal clarity */
+            font-weight: bold;
             line-height: 1.2;
             margin: 0;
             padding: 0;
             color: #000;
-            width: 74mm; /* Account for margins */
+            width: 74mm;
             max-width: 74mm;
             background: #fff;
         }
@@ -26,59 +26,30 @@
             padding: 0;
         }
         
-        /* Header Section */
+        /* Invoice Header */
         .receipt-header {
             text-align: center;
             border-bottom: 2px solid #000;
-            padding-bottom: 3mm;
+            padding-bottom: 2mm;
             margin-bottom: 3mm;
         }
         
-        .store-name {
-            font-size: 16px;
+        .invoice-no {
+            font-size: 13px;
             font-weight: 900;
-            letter-spacing: 1px;
             margin: 1mm 0;
         }
         
-        .receipt-title {
-            font-size: 14px;
-            font-weight: 900;
-            margin: 2mm 0;
-            text-decoration: underline;
-        }
-        
-        /* Header Info Section */
-        .header-info {
-            margin: 3mm 0;
-            border-bottom: 1px dashed #000;
-            padding-bottom: 3mm;
-        }
-        
-        .info-row {
-            display: flex;
-            justify-content: space-between;
-            margin: 1.5mm 0;
-            font-weight: bold;
-        }
-        
-        .label {
-            font-weight: 900;
-            width: 35mm;
-            text-transform: uppercase;
-        }
-        
-        .info-value {
-            font-weight: bold;
-            text-align: right;
-            flex: 1;
+        .invoice-date {
+            font-size: 10px;
+            margin: 1mm 0;
         }
         
         /* Items Table */
         .receipt-table {
             width: 100%;
             border-collapse: collapse;
-            margin: 3mm 0;
+            margin: 2mm 0;
             font-size: 10px;
             font-weight: bold;
         }
@@ -87,7 +58,7 @@
             background: #f0f0f0;
             font-weight: 900;
             text-transform: uppercase;
-            padding: 2mm 1mm;
+            padding: 1.5mm 1mm;
             border-bottom: 2px solid #000;
             font-size: 9px;
         }
@@ -102,7 +73,7 @@
         .receipt-table th:nth-child(1),
         .receipt-table td:nth-child(1) {
             text-align: left;
-            width: 40%;
+            width: 45%;
         }
         
         .receipt-table th:nth-child(2),
@@ -110,11 +81,9 @@
         .receipt-table th:nth-child(3),
         .receipt-table td:nth-child(3),
         .receipt-table th:nth-child(4),
-        .receipt-table td:nth-child(4),
-        .receipt-table th:nth-child(5),
-        .receipt-table td:nth-child(5) {
+        .receipt-table td:nth-child(4) {
             text-align: right;
-            width: 15%;
+            width: 18%;
         }
         
         .item-name {
@@ -126,8 +95,8 @@
         
         /* Totals Section */
         .totals-section {
-            margin-top: 4mm;
-            padding-top: 3mm;
+            margin-top: 2mm;
+            padding-top: 2mm;
             border-top: 2px solid #000;
             font-weight: bold;
         }
@@ -135,8 +104,9 @@
         .total-row {
             display: flex;
             justify-content: space-between;
-            margin: 2mm 0;
+            margin: 1.5mm 0;
             font-weight: bold;
+            font-size: 11px;
         }
         
         .total-label {
@@ -150,47 +120,14 @@
         
         .grand-total {
             font-weight: 900;
-            font-size: 16px;
+            font-size: 14px;
             border-top: 2px solid #000;
             border-bottom: 2px solid #000;
-            padding: 3mm 0;
-            margin: 3mm 0;
+            padding: 2mm 0;
+            margin: 2mm 0;
             text-align: center;
             background: #f8f8f8;
             letter-spacing: 1px;
-            text-transform: uppercase;
-        }
-        
-        /* Payment Status */
-        .payment-status {
-            text-align: center;
-            font-size: 14px;
-            font-weight: 900;
-            margin: 3mm 0;
-            text-decoration: underline;
-            text-transform: uppercase;
-        }
-        
-        /* Footer Section */
-        .receipt-footer {
-            margin-top: 4mm;
-            text-align: center;
-            border-top: 1px dashed #000;
-            padding-top: 3mm;
-            font-size: 9px;
-            font-weight: bold;
-        }
-        
-        .thank-you {
-            font-size: 12px;
-            font-weight: 900;
-            text-transform: uppercase;
-            margin: 2mm 0;
-        }
-        
-        .footer-line {
-            margin: 1mm 0;
-            font-weight: bold;
         }
         
         /* Print Media Styles */
@@ -206,12 +143,8 @@
             * {
                 font-weight: bold !important;
             }
-            .store-name, .receipt-title, .grand-total, .payment-status {
-                font-weight: 900 !important;
-            }
         }
         
-        /* Hide print buttons on print */
         .print-hidden {
             display: block;
         }
@@ -240,46 +173,10 @@
 </head>
 <body onload="handlePrintAndRedirect();">
     <div class="receipt">
-        <!-- Header Section -->
+        <!-- Header with Invoice Info -->
         <div class="receipt-header">
-            <div class="store-name">SALES MANAGEMENT</div>
-            <div class="receipt-title">INVOICE RECEIPT</div>
-        </div>
-        
-        <!-- Header Info Section -->
-        <div class="header-info">
-            <div class="info-row">
-                <span class="label">Invoice No:</span>
-                <span class="info-value">{{ invoice.invoice_no }}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Date:</span>
-                <span class="info-value">{{ invoice.date_of_sale|date:'M d, Y' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Time:</span>
-                <span class="info-value">{{ "now"|date:'h:i A' }}</span>
-            </div>
-            <div class="info-row">
-                <span class="label">Customer:</span>
-                <span class="info-value">{{ invoice.customer_name|truncatechars:20 }}</span>
-            </div>
-            {% if invoice.customer_phone %}
-            <div class="info-row">
-                <span class="label">Phone:</span>
-                <span class="info-value">{{ invoice.customer_phone }}</span>
-            </div>
-            {% endif %}
-            <div class="info-row">
-                <span class="label">User:</span>
-                <span class="info-value">{{ invoice.user.username }}</span>
-            </div>
-            {% if invoice.notes %}
-            <div class="info-row">
-                <span class="label">Notes:</span>
-                <span class="info-value">{{ invoice.notes|truncatechars:30 }}</span>
-            </div>
-            {% endif %}
+            <div class="invoice-no">Invoice #{{ invoice.invoice_no }}</div>
+            <div class="invoice-date">{{ invoice.date_of_sale|date:'M d, Y' }}</div>
         </div>
 
         <!-- Items Table -->
@@ -289,7 +186,6 @@
                     <th>Item</th>
                     <th>Price</th>
                     <th>Qty</th>
-                    <th>Disc</th>
                     <th>Total</th>
                 </tr>
             </thead>
@@ -299,7 +195,6 @@
                     <td class="item-name">{{ item.item|truncatechars:20 }}</td>
                     <td>{{ item.unit_price|floatformat:2 }}</td>
                     <td>{{ item.quantity }}</td>
-                    <td>{{ item.discount|default:0|floatformat:0 }}</td>
                     <td>{{ item.total_price|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
@@ -313,47 +208,13 @@
                 <span class="total-value">{{ invoice.total|floatformat:2 }}</span>
             </div>
             
-            <div class="total-row">
-                <span class="total-label">Amount Paid:</span>
-                <span class="total-value">{{ invoice.amount_paid|default:0|floatformat:2 }}</span>
-            </div>
-            
-            <div class="total-row">
-                <span class="total-label">Balance:</span>
-                <span class="total-value" id="balance-display">0.00</span>
-            </div>
-            
             <div class="grand-total">
                 TOTAL: {{ invoice.total|floatformat:2 }}
-            </div>
-            
-            {% if invoice.amount_paid >= invoice.total %}
-            <div class="payment-status">PAID IN FULL</div>
-            {% else %}
-            <div class="payment-status">BALANCE DUE: <span id="balance-due">0.00</span></div>
-            {% endif %}
-        </div>
-
-        <!-- Receipt Footer -->
-        <div class="receipt-footer">
-            <div class="thank-you">THANK YOU!</div>
-            <div class="footer-line">Computer Generated Receipt</div>
-            <div class="footer-line">{{ "now"|date:"M d, Y h:i A" }}</div>
-            <div class="footer-line" style="margin-top: 3mm; border-top: 1px dashed #000; padding-top: 2mm;">
-                Please keep this receipt<br>
-                for your records
             </div>
         </div>
 
         <!-- Print Controls -->
         <div class="print-hidden" style="text-align: center; margin-top: 5mm;">
-            <!-- Auto-Print Status Message -->
-            <div id="print-status" style="background: #e3f2fd; border: 2px solid #2196f3; padding: 15px; margin: 10px 0; border-radius: 8px; color: #1565c0;">
-                <h3 style="margin: 0 0 10px 0; color: #1565c0;">📄 Receipt Ready for Printing!</h3>
-                <p style="margin: 5px 0;">The print dialog should open automatically.</p>
-                <p style="margin: 5px 0; font-size: 14px;">If it doesn't appear, click "Print Again" below.</p>
-            </div>
-            
             <div style="display: flex; gap: 15px; justify-content: center; flex-wrap: wrap;">
                 <button onclick="window.print()" class="print-button" style="background: #4CAF50; font-size: 16px; padding: 12px 24px;">
                     🖨️ Print Again
@@ -362,48 +223,33 @@
                     ← Back to Sales Entry
                 </button>
             </div>
-            
-            <!-- Instructions -->
-            <div style="margin-top: 15px; padding: 10px; background: #fff3cd; border: 1px solid #ffeaa7; border-radius: 6px; font-size: 14px; color: #856404;">
-                <strong>💡 Printing Tips:</strong><br>
-                • If print dialog doesn't appear, your browser may be blocking pop-ups<br>
-                • Check browser settings to allow pop-ups for this site<br>
-                • Use Ctrl+P if automatic printing fails
-            </div>
         </div>
     </div>
 
     <script>
-        // Calculate balance on page load
-        function calculateBalance() {
-            var total = {{ invoice.total|default:0 }};
-            var paid = {{ invoice.amount_paid|default:0 }};
-            var balance = total - paid;
-            
-            document.getElementById('balance-display').textContent = balance.toFixed(2);
-            
-            var balanceDueElement = document.getElementById('balance-due');
-            if (balanceDueElement) {
-                balanceDueElement.textContent = balance.toFixed(2);
-            }
-        }
-        
         function handlePrintAndRedirect() {
             try {
-                console.log('Receipt page loaded, calculating balance and printing...');
-                
-                // Calculate balance first
-                calculateBalance();
+                console.log('Receipt page loaded, printing...');
                 
                 // Trigger print immediately with minimal delay
                 setTimeout(function() {
                     console.log('Triggering print dialog...');
                     window.print();
+                    
+                    // Redirect to sales entry after print dialog closes or after a delay
+                    // The timeout ensures redirect happens regardless of user action on print dialog
+                    setTimeout(function() {
+                        console.log('Redirecting to sales entry after print...');
+                        window.location.href = '/sales/sales_entry/';
+                    }, 1000);
                 }, 100);
                 
             } catch (error) {
                 console.error('Print error:', error);
-                calculateBalance(); // Still calculate balance even if print fails
+                // Redirect anyway if print fails
+                setTimeout(function() {
+                    window.location.href = '/sales/sales_entry/';
+                }, 2000);
             }
         }
         
@@ -413,7 +259,6 @@
                 window.location.href = '/sales/sales_entry/';
             } catch (error) {
                 console.error('Redirect error:', error);
-                // Ultimate fallback
                 if (window.history.length > 1) {
                     window.history.back();
                 } else {
@@ -421,9 +266,6 @@
                 }
             }
         }
-        
-        // Calculate balance immediately when script loads
-        calculateBalance();
     </script>
 </body>
 </html>

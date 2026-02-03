@@ -6,6 +6,7 @@
     <h2 class="text-xl sm:text-2xl font-bold mb-6 text-gray-900 dark:text-gray-100">New Invoice</h2>
     <form method="post" id="sales-form">
         {% csrf_token %}
+        <input type="hidden" id="button_pressed" name="button_pressed" value="">
         <div class="grid grid-cols-1 md:grid-cols-2 gap-3 sm:gap-6 mb-6">
             <div>
                 <label class="block mb-2 text-xs sm:text-sm font-semibold text-gray-900 dark:text-white">Invoice No</label>
@@ -41,7 +42,7 @@
                         <th class="px-2 sm:px-6 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Item</th>
                         <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Unit Price</th>
                         <th class="px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Qty</th>
-                        <th class="hidden sm:table-cell px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Discount</th>
+                        <th class="table-cell px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Discount</th>
                         <th class="hidden md:table-cell px-2 sm:px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Total</th>
                         <th class="px-2 py-2"></th>
                     </tr>
@@ -53,7 +54,7 @@
                         <td class="px-2 sm:px-6 py-2">{{ form.item|add_class:'select2-item w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-xs sm:text-sm' }}</td>
                         <td class="px-2 sm:px-4 py-2">{{ form.unit_price|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 unit-price text-xs sm:text-sm' }}</td>
                         <td class="px-2 sm:px-4 py-2">{{ form.quantity|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 quantity text-xs sm:text-sm' }}</td>
-                        <td class="hidden sm:table-cell px-2 sm:px-4 py-2">{{ form.discount|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 discount text-xs sm:text-sm' }}</td>
+                        <td class="table-cell px-2 sm:px-4 py-2">{{ form.discount|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 discount text-xs sm:text-sm' }}</td>
                         <td class="hidden md:table-cell px-2 sm:px-4 py-2">{{ form.total_price|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 total-price text-xs sm:text-sm' }}</td>
                         <td class="px-2 py-2 text-center">
                             <button type="button" class="add-row text-green-600 hover:text-green-800"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></button>
@@ -66,7 +67,7 @@
                         <td class="px-2 sm:px-6 py-2">{{ formset.empty_form.item|add_class:'select2-item w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 text-xs sm:text-sm' }}</td>
                         <td class="px-2 sm:px-4 py-2">{{ formset.empty_form.unit_price|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 unit-price text-xs sm:text-sm' }}</td>
                         <td class="px-2 sm:px-4 py-2">{{ formset.empty_form.quantity|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 quantity text-xs sm:text-sm' }}</td>
-                        <td class="hidden sm:table-cell px-2 sm:px-4 py-2">{{ formset.empty_form.discount|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 discount text-xs sm:text-sm' }}</td>
+                        <td class="table-cell px-2 sm:px-4 py-2">{{ formset.empty_form.discount|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 discount text-xs sm:text-sm' }}</td>
                         <td class="hidden md:table-cell px-2 sm:px-4 py-2">{{ formset.empty_form.total_price|add_class:'w-full rounded border-gray-300 dark:border-gray-700 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white px-2 py-1 total-price text-xs sm:text-sm' }}</td>
                         <td class="px-2 py-2 text-center">
                             <button type="button" class="add-row text-green-600 hover:text-green-800"><svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4 sm:h-5 sm:w-5 inline" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" /></svg></button>
@@ -89,8 +90,8 @@
             </div>
         </div>
         <div class="flex flex-col sm:flex-row gap-3 sm:gap-4">
-            <button type="submit" name="save_print" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-all">Save and Print</button>
-            <button type="submit" name="save" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 transition-all">Save</button>
+            <button type="submit" name="save_print" value="1" class="text-white bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800 transition-all">Save and Print</button>
+            <button type="submit" name="save" value="1" class="text-white bg-green-700 hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 font-medium rounded-lg text-sm w-full sm:w-auto px-5 py-2.5 text-center dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800 transition-all">Save</button>
         </div>
     </form>
 </div>
@@ -738,6 +739,16 @@ $(document).ready(function() {
     // Form submission with validation and error handling
     document.getElementById('sales-form').addEventListener('submit', function(e) {
         console.log('Form submission started...');
+        console.log('Submitter button:', e.submitter);
+        console.log('Submitter name:', e.submitter?.name);
+        console.log('Submitter value:', e.submitter?.value);
+        
+        // FIRST: Capture which button was clicked - do this BEFORE any other logic
+        const submitButton = e.submitter || document.querySelector('button[type="submit"]');
+        if (submitButton) {
+            document.getElementById('button_pressed').value = submitButton.name || '';
+            console.log('Captured button_pressed:', submitButton.name);
+        }
         
         try {
             // Validate quantities before allowing submission
@@ -799,7 +810,6 @@ $(document).ready(function() {
             }
             
             // Add loading state to prevent double submissions
-            const submitButton = e.submitter || document.querySelector('button[type="submit"]');
             if (submitButton) {
                 submitButton.disabled = true;
                 submitButton.textContent = submitButton.name === 'save_print' ? 'Saving & Printing...' : 'Saving...';
@@ -812,6 +822,7 @@ $(document).ready(function() {
             }
             
             console.log('Form validation passed, submitting...');
+            console.log('Final button_pressed value:', document.getElementById('button_pressed').value);
             
         } catch (error) {
             console.error('Form submission error:', error);
