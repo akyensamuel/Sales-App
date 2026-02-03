@@ -359,9 +359,25 @@
     </div>
 
     <script>
-        // Auto-print when page loads
-        window.onload = function() {
+        // Auto-print when page loads with multiple fallback methods
+        function triggerPrint() {
+            console.log('Print dialog triggered');
             window.print();
+        }
+        
+        // Method 1: Use DOMContentLoaded (most reliable)
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', function() {
+                setTimeout(triggerPrint, 500);
+            });
+        } else {
+            // Method 2: If DOM is already loaded, print immediately
+            setTimeout(triggerPrint, 500);
+        }
+        
+        // Method 3: Also use window.onload as fallback
+        window.onload = function() {
+            setTimeout(triggerPrint, 500);
         }
         
         // Navigate back to cash sales entry
