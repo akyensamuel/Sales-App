@@ -1,40 +1,82 @@
 {% extends "core/base.html" %}
 {% block content %}
-<div class="container py-5">
-    <h1 class="text-center mb-5 text-4xl">Welcome to the Sales Management System</h1>
-    <div class="flex justify-center gap-4">
+<div class="min-h-screen bg-gradient-to-b from-gray-50 to-gray-100 dark:from-gray-900 dark:to-gray-800 py-8 sm:py-12 lg:py-16">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <!-- Header -->
+        <div class="text-center mb-8 sm:mb-12 lg:mb-16">
+            <h1 class="text-3xl sm:text-4xl lg:text-5xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-4">
+                Welcome to Sales Management System
+            </h1>
+            <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 max-w-2xl mx-auto">
+                Streamline your business operations with integrated sales and accounting management tools
+            </p>
+        </div>
 
-        <!-- card 1 -->
-            <div class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                <a href="#">
-                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Sales and Management</h5>
-                </a>
-                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Manage your sales operations efficiently. Cashiers can record sales transactions, 
-                        track product inventory, and process customer purchases. Managers can oversee all 
-                        sales activities, edit records, and monitor performance with detailed insights.</p>
-                <a href="{% url 'sales_root' %}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-blue-700 rounded-lg hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800">
-                    Go to Sales
-                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
-                    </svg>
-                </a>
+        <!-- Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 sm:gap-8 lg:gap-10">
+            <!-- Sales Card -->
+            <div class="h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div class="p-6 sm:p-8 h-full flex flex-col">
+                    <!-- Icon -->
+                    <div class="mb-4 sm:mb-6">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-blue-100 dark:bg-blue-900/30 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-blue-600 dark:text-blue-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Sales & Management</h2>
+                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 flex-grow">
+                        Manage sales efficiently with invoice tracking, inventory management, and real-time performance insights. Perfect for cashiers and managers.
+                    </p>
+                    
+                    <!-- Button -->
+                    <a href="{% url 'sales_root' %}" class="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-blue-600 hover:bg-blue-700 dark:bg-blue-600 dark:hover:bg-blue-700 rounded-lg transition-colors duration-200 group w-full sm:w-auto">
+                        Go to Sales
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 ms-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
 
-        <!-- card 2 -->
-            <div class="max-w-sm p-6 bg-white border border-gray-200 rounded-lg shadow-sm dark:bg-gray-800 dark:border-gray-700">
-                <a href="#">
-                    <h5 class="mb-2 text-2xl font-bold tracking-tight text-gray-900 dark:text-white">Accounting & Financial Management</h5>
-                </a>
-                <p class="mb-3 font-normal text-gray-700 dark:text-gray-400">Comprehensive financial management for your business. Track expenses by category, 
-                        generate profit & loss reports, monitor revenue trends, and manage outstanding invoices. 
-                        Complete audit trails and professional financial reporting for business insights.</p>
-                <a href="{% url 'accounting_login' %}" class="inline-flex items-center px-3 py-2 text-sm font-medium text-center text-white bg-green-700 rounded-lg hover:bg-green-800 focus:ring-4 focus:outline-none focus:ring-green-300 dark:bg-green-600 dark:hover:bg-green-700 dark:focus:ring-green-800">
-                    Go to Accounting
-                    <svg class="rtl:rotate-180 w-3.5 h-3.5 ms-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
-                        <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
-                    </svg>
-                </a>
+            <!-- Accounting Card -->
+            <div class="h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl shadow-lg hover:shadow-xl transition-all duration-300 overflow-hidden">
+                <div class="p-6 sm:p-8 h-full flex flex-col">
+                    <!-- Icon -->
+                    <div class="mb-4 sm:mb-6">
+                        <div class="w-12 h-12 sm:w-14 sm:h-14 bg-green-100 dark:bg-green-900/30 rounded-lg flex items-center justify-center">
+                            <svg class="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z"/>
+                            </svg>
+                        </div>
+                    </div>
+                    
+                    <!-- Content -->
+                    <h2 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white mb-2 sm:mb-3">Accounting & Finance</h2>
+                    <p class="text-sm sm:text-base text-gray-600 dark:text-gray-400 mb-6 sm:mb-8 flex-grow">
+                        Complete financial management with expense tracking, P&L reports, revenue analysis, and audit trails. Designed for financial administrators.
+                    </p>
+                    
+                    <!-- Button -->
+                    <a href="{% url 'accounting_login' %}" class="inline-flex items-center justify-center px-4 sm:px-6 py-2.5 sm:py-3 text-sm sm:text-base font-semibold text-white bg-green-600 hover:bg-green-700 dark:bg-green-600 dark:hover:bg-green-700 rounded-lg transition-colors duration-200 group w-full sm:w-auto">
+                        Go to Accounting
+                        <svg class="w-4 h-4 sm:w-5 sm:h-5 ms-2 group-hover:translate-x-1 transition-transform" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 14 10">
+                            <path stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M1 5h12m0 0L9 1m4 4L9 9"/>
+                        </svg>
+                    </a>
+                </div>
             </div>
+        </div>
+
+        <!-- Footer Info -->
+        <div class="mt-12 sm:mt-16 text-center">
+            <p class="text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                Secure • Reliable • Professional Sales & Accounting Management
+            </p>
+        </div>
     </div>
 </div>
 {% endblock content %}

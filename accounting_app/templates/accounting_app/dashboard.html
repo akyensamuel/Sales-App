@@ -5,112 +5,112 @@
 
 {% block accounting_content %}
     <!-- Financial Overview Cards -->
-    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6 mb-8">
         <!-- Total Monthly Revenue -->
-        <a href="{% url 'revenue_tracking' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-green-500 transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400">Total Monthly Revenue</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400">₵{{ monthly_revenue|floatformat:2 }}</p>
+        <a href="{% url 'revenue_tracking' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 border-l-4 border-green-500 transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-green-600 dark:group-hover:text-green-400 truncate">Total Monthly Revenue</p>
+                    <p class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white group-hover:text-green-600 dark:group-hover:text-green-400 truncate">₵{{ monthly_revenue|floatformat:2 }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_month }}</p>
-                    <div class="flex items-center mt-1">
-                        <span class="text-xs text-blue-600 dark:text-blue-400">Regular: ₵{{ regular_monthly_revenue|floatformat:2 }}</span>
-                        <span class="mx-1 text-gray-400">|</span>
-                        <span class="text-xs text-magenta-600 dark:text-magenta-400">Cash: ₵{{ cash_monthly_revenue|floatformat:2 }}</span>
+                    <div class="flex items-center mt-1 gap-1 text-xs flex-wrap">
+                        <span class="text-blue-600 dark:text-blue-400 truncate">Regular: ₵{{ regular_monthly_revenue|floatformat:1 }}</span>
+                        <span class="text-gray-400 hidden sm:inline">|</span>
+                        <span class="text-magenta-600 dark:text-magenta-400 truncate">Cash: ₵{{ cash_monthly_revenue|floatformat:1 }}</span>
                     </div>
                 </div>
-                <div class="p-3 bg-green-100 dark:bg-green-900 rounded-full group-hover:bg-green-200 dark:group-hover:bg-green-800">
-                    <i class="fas fa-dollar-sign text-green-600 dark:text-green-400 text-xl"></i>
+                <div class="p-2 sm:p-3 bg-green-100 dark:bg-green-900 rounded-full group-hover:bg-green-200 dark:group-hover:bg-green-800 flex-shrink-0">
+                    <i class="fas fa-dollar-sign text-green-600 dark:text-green-400 text-lg sm:text-xl"></i>
                 </div>
             </div>
         </a>
 
         <!-- Monthly Expenses -->
-        <a href="{% url 'expense_list' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-red-500 transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400">Monthly Expenses</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400">₵{{ monthly_expenses|floatformat:2 }}</p>
+        <a href="{% url 'expense_list' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 border-l-4 border-red-500 transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-red-600 dark:group-hover:text-red-400 truncate">Monthly Expenses</p>
+                    <p class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white group-hover:text-red-600 dark:group-hover:text-red-400 truncate">₵{{ monthly_expenses|floatformat:2 }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ current_month }}</p>
                 </div>
-                <div class="p-3 bg-red-100 dark:bg-red-900 rounded-full group-hover:bg-red-200 dark:group-hover:bg-red-800">
-                    <i class="fas fa-credit-card text-red-600 dark:text-red-400 text-xl"></i>
+                <div class="p-2 sm:p-3 bg-red-100 dark:bg-red-900 rounded-full group-hover:bg-red-200 dark:group-hover:bg-red-800 flex-shrink-0">
+                    <i class="fas fa-credit-card text-red-600 dark:text-red-400 text-lg sm:text-xl"></i>
                 </div>
             </div>
         </a>
 
         <!-- Net Profit -->
-        <a href="{% url 'profit_loss_report' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 {% if net_profit >= 0 %}border-blue-500{% else %}border-orange-500{% endif %} transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 {% if net_profit >= 0 %}group-hover:text-blue-600 dark:group-hover:text-blue-400{% else %}group-hover:text-orange-600 dark:group-hover:text-orange-400{% endif %}">Net Profit</p>
-                    <p class="text-2xl font-bold {% if net_profit >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-orange-600 dark:text-orange-400{% endif %}">
+        <a href="{% url 'profit_loss_report' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 border-l-4 {% if net_profit >= 0 %}border-blue-500{% else %}border-orange-500{% endif %} transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 {% if net_profit >= 0 %}group-hover:text-blue-600 dark:group-hover:text-blue-400{% else %}group-hover:text-orange-600 dark:group-hover:text-orange-400{% endif %} truncate">Net Profit</p>
+                    <p class="text-lg sm:text-2xl font-bold {% if net_profit >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-orange-600 dark:text-orange-400{% endif %} truncate">
                         ₵{{ net_profit|floatformat:2 }}
                     </p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">Margin: {{ profit_margin|floatformat:1 }}%</p>
                 </div>
-                <div class="p-3 {% if net_profit >= 0 %}bg-blue-100 dark:bg-blue-900 group-hover:bg-blue-200 dark:group-hover:bg-blue-800{% else %}bg-orange-100 dark:bg-orange-900 group-hover:bg-orange-200 dark:group-hover:bg-orange-800{% endif %} rounded-full">
-                    <i class="fas fa-chart-line {% if net_profit >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-orange-600 dark:text-orange-400{% endif %} text-xl"></i>
+                <div class="p-2 sm:p-3 {% if net_profit >= 0 %}bg-blue-100 dark:bg-blue-900 group-hover:bg-blue-200 dark:group-hover:bg-blue-800{% else %}bg-orange-100 dark:bg-orange-900 group-hover:bg-orange-200 dark:group-hover:bg-orange-800{% endif %} rounded-full flex-shrink-0">
+                    <i class="fas fa-chart-line {% if net_profit >= 0 %}text-blue-600 dark:text-blue-400{% else %}text-orange-600 dark:text-orange-400{% endif %} text-lg sm:text-xl"></i>
                 </div>
             </div>
         </a>
 
         <!-- Outstanding Payments -->
-        <a href="{% url 'revenue_tracking' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 border-l-4 border-yellow-500 transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
-            <div class="flex items-center justify-between">
-                <div>
-                    <p class="text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400">Outstanding</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400">₵{{ outstanding_amount|floatformat:2 }}</p>
+        <a href="{% url 'revenue_tracking' %}" class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 border-l-4 border-yellow-500 transition-all duration-200 hover:shadow-lg hover:scale-105 transform cursor-pointer group">
+            <div class="flex items-center justify-between gap-2">
+                <div class="min-w-0">
+                    <p class="text-xs sm:text-sm font-medium text-gray-600 dark:text-gray-400 group-hover:text-yellow-600 dark:group-hover:text-yellow-400 truncate">Outstanding</p>
+                    <p class="text-lg sm:text-2xl font-bold text-gray-900 dark:text-white group-hover:text-yellow-600 dark:group-hover:text-yellow-400 truncate">₵{{ outstanding_amount|floatformat:2 }}</p>
                     <p class="text-xs text-gray-500 dark:text-gray-400">{{ outstanding_count }} invoice{{ outstanding_count|pluralize }}</p>
                 </div>
-                <div class="p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800">
-                    <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-xl"></i>
+                <div class="p-2 sm:p-3 bg-yellow-100 dark:bg-yellow-900 rounded-full group-hover:bg-yellow-200 dark:group-hover:bg-yellow-800 flex-shrink-0">
+                    <i class="fas fa-exclamation-triangle text-yellow-600 dark:text-yellow-400 text-lg sm:text-xl"></i>
                 </div>
             </div>
         </a>
     </div>
 
     <!-- Department Performance Breakdown -->
-    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
         <!-- Regular Sales Department -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-colors duration-200">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2 text-sm sm:text-base">
                 <i class="fas fa-store mr-2 text-blue-600 dark:text-blue-400"></i>Regular Sales Department
             </h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-blue-50 dark:bg-blue-900/50 p-4 rounded-lg">
-                    <p class="text-sm text-blue-600 dark:text-blue-400 font-medium">Monthly Revenue</p>
-                    <p class="text-xl font-bold text-blue-700 dark:text-blue-300">₵{{ regular_monthly_revenue|floatformat:2 }}</p>
+            <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                <div class="bg-blue-50 dark:bg-blue-900/50 p-3 sm:p-4 rounded-lg">
+                    <p class="text-xs sm:text-sm text-blue-600 dark:text-blue-400 font-medium">Monthly Revenue</p>
+                    <p class="text-lg sm:text-xl font-bold text-blue-700 dark:text-blue-300">₵{{ regular_monthly_revenue|floatformat:2 }}</p>
                     <p class="text-xs text-gray-600 dark:text-gray-400">{{ regular_department_percentage|floatformat:1 }}% of total</p>
                 </div>
-                <div class="bg-yellow-50 dark:bg-yellow-900/50 p-4 rounded-lg">
-                    <p class="text-sm text-yellow-600 dark:text-yellow-400 font-medium">Outstanding</p>
-                    <p class="text-xl font-bold text-yellow-700 dark:text-yellow-300">₵{{ outstanding_amount|floatformat:2 }}</p>
+                <div class="bg-yellow-50 dark:bg-yellow-900/50 p-3 sm:p-4 rounded-lg">
+                    <p class="text-xs sm:text-sm text-yellow-600 dark:text-yellow-400 font-medium">Outstanding</p>
+                    <p class="text-lg sm:text-xl font-bold text-yellow-700 dark:text-yellow-300">₵{{ outstanding_amount|floatformat:2 }}</p>
                     <p class="text-xs text-gray-600 dark:text-gray-400">{{ outstanding_count }} invoice{{ outstanding_count|pluralize }}</p>
                 </div>
             </div>
         </div>
 
         <!-- Cash Department -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 transition-colors duration-200">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 sm:p-6 transition-colors duration-200">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2 text-sm sm:text-base">
                 <i class="fas fa-money-bill-wave mr-2 text-magenta-600 dark:text-magenta-400"></i>Cash Department
             </h3>
-            <div class="grid grid-cols-2 gap-4">
-                <div class="bg-magenta-50 dark:bg-magenta-900/50 p-4 rounded-lg">
-                    <p class="text-sm text-magenta-600 dark:text-magenta-400 font-medium">Monthly Revenue</p>
-                    <p class="text-xl font-bold text-magenta-700 dark:text-magenta-300">₵{{ cash_monthly_revenue|floatformat:2 }}</p>
+            <div class="grid grid-cols-2 gap-2 sm:gap-4">
+                <div class="bg-magenta-50 dark:bg-magenta-900/50 p-3 sm:p-4 rounded-lg">
+                    <p class="text-xs sm:text-sm text-magenta-600 dark:text-magenta-400 font-medium">Monthly Revenue</p>
+                    <p class="text-lg sm:text-xl font-bold text-magenta-700 dark:text-magenta-300">₵{{ cash_monthly_revenue|floatformat:2 }}</p>
                     <p class="text-xs text-gray-600 dark:text-gray-400">{{ cash_department_percentage|floatformat:1 }}% of total</p>
                 </div>
-                <div class="bg-indigo-50 dark:bg-indigo-900/50 p-4 rounded-lg">
-                    <p class="text-sm text-indigo-600 dark:text-indigo-400 font-medium">Transactions</p>
-                    <p class="text-xl font-bold text-indigo-700 dark:text-indigo-300">{{ cash_transactions_count }}</p>
+                <div class="bg-indigo-50 dark:bg-indigo-900/50 p-3 sm:p-4 rounded-lg">
+                    <p class="text-xs sm:text-sm text-indigo-600 dark:text-indigo-400 font-medium">Transactions</p>
+                    <p class="text-lg sm:text-xl font-bold text-indigo-700 dark:text-indigo-300">{{ cash_transactions_count }}</p>
                     <p class="text-xs text-gray-600 dark:text-gray-400">{{ cash_invoices_count }} invoice{{ cash_invoices_count|pluralize }}</p>
                 </div>
             </div>
             <div class="mt-4">
                 <a href="{% url 'cash_department_analytics' %}" 
-                   class="inline-flex items-center px-4 py-2 bg-magenta-100 dark:bg-magenta-900/70 hover:bg-magenta-200 dark:hover:bg-magenta-900 text-magenta-700 dark:text-magenta-300 rounded-lg transition-colors duration-200">
+                   class="inline-flex items-center px-3 sm:px-4 py-2 bg-magenta-100 dark:bg-magenta-900/70 hover:bg-magenta-200 dark:hover:bg-magenta-900 text-magenta-700 dark:text-magenta-300 rounded-lg transition-colors duration-200 text-xs sm:text-sm">
                     <i class="fas fa-chart-line mr-2"></i>
                     View Cash Analytics
                 </a>
