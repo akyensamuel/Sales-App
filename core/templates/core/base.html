@@ -3,7 +3,14 @@
 <html class>
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="theme-color" content="#d946ef">
+    <meta name="description" content="A comprehensive sales and accounting management application">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="apple-mobile-web-app-title" content="Sales App">
+    <link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'><rect fill='%23d946ef' width='192' height='192'/><text x='50%' y='50%' font-size='80' font-weight='bold' fill='white' text-anchor='middle' dominant-baseline='middle'>SA</text></svg>">
+    <link rel="manifest" href="/manifest.json">>
     <title>Sales Management System</title>
     <link rel="stylesheet" href="{% static 'css/output.css' %}">
     <script>
@@ -31,5 +38,104 @@
     
     <!-- Extra JavaScript block for child templates -->
     {% block extra_js %}{% endblock %}
+    
+    <!-- PWA Install Button -->
+    <div id="installPrompt" class="hidden fixed bottom-4 left-4 right-4 sm:left-auto sm:right-4 sm:w-80 bg-gradient-to-r from-magenta-600 to-magenta-700 text-white rounded-lg shadow-lg p-4 z-50 animate-slideUp">
+        <div class="flex items-start justify-between">
+            <div class="flex-1">
+                <h3 class="font-bold text-lg mb-2">Install Sales App</h3>
+                <p class="text-sm opacity-90">Add the app to your home screen for quick access</p>
+            </div>
+            <button id="closeInstallPrompt" class="text-white opacity-75 hover:opacity-100 ml-2 flex-shrink-0">
+                <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
+                    <path fill-rule="evenodd" d="M4.293 4.293a1 1 0 011.414 0L10 8.586l4.293-4.293a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 01-1.414 1.414L10 11.414l-4.293 4.293a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414z" clip-rule="evenodd" />
+                </svg>
+            </button>
+        </div>
+        <div class="flex gap-2 mt-4">
+            <button id="installBtn" class="flex-1 bg-white text-magenta-600 font-semibold py-2 px-4 rounded hover:bg-gray-100 transition-colors">
+                Install
+            </button>
+            <button id="installBtnCancel" class="flex-1 bg-magenta-700 hover:bg-magenta-800 font-semibold py-2 px-4 rounded transition-colors">
+                Later
+            </button>
+        </div>
+    </div>
+    
+    <style>
+        @keyframes slideUp {
+            from {
+                transform: translateY(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        
+        .animate-slideUp {
+            animation: slideUp 0.3s ease-out;
+        }
+        
+        .hidden {
+            display: none !important;
+        }
+    </style>
+
+    <script>
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('{% static "sw.js" %}').then((registration) => {
+                console.log('Service Worker registered:', registration);
+            }).catch((error) => {
+                console.log('Service Worker registration failed:', error);
+            });
+        }
+
+        // Handle PWA Installation
+        let deferredPrompt;
+        const installPrompt = document.getElementById('installPrompt');
+        const installBtn = document.getElementById('installBtn');
+        const installBtnCancel = document.getElementById('installBtnCancel');
+        const closeInstallPrompt = document.getElementById('closeInstallPrompt');
+
+        // Capture the beforeinstallprompt event
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            
+            // Show the install prompt after a short delay
+            setTimeout(() => {
+                installPrompt.classList.remove('hidden');
+            }, 2000);
+        });
+
+        // Install button click handler
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to the install prompt: ${outcome}`);
+                deferredPrompt = null;
+                installPrompt.classList.add('hidden');
+            }
+        });
+
+        // Cancel/Later buttons
+        const hidePrompt = () => {
+            installPrompt.classList.add('hidden');
+        };
+        
+        installBtnCancel.addEventListener('click', hidePrompt);
+        closeInstallPrompt.addEventListener('click', hidePrompt);
+
+        // Hide prompt if app is already installed
+        window.addEventListener('appinstalled', () => {
+            console.log('PWA was installed');
+            deferredPrompt = null;
+            installPrompt.classList.add('hidden');
+        });
+    </script>
 </body>
 </html>

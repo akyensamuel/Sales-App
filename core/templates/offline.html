@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Offline</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        magenta: {
+                            50: '#fdf2f8',
+                            100: '#fce7f3',
+                            200: '#fbcfe8',
+                            300: '#f8b4d4',
+                            400: '#f472b6',
+                            500: '#ec4899',
+                            600: '#d946ef',
+                            700: '#be185d',
+                            800: '#8b5cf6',
+                            900: '#6b21a8',
+                        },
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        html {
+            scroll-behavior: smooth;
+        }
+    </style>
+</head>
+<body class="bg-gradient-to-br from-gray-900 to-gray-800 text-white min-h-screen flex items-center justify-center p-4">
+    <div class="text-center max-w-md">
+        <div class="mb-6">
+            <svg class="w-24 h-24 mx-auto text-magenta-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8.111 16.404a5.5 5.5 0 017.778 0M12 20h.01m-7.08-7.071c3.904-3.905 10.236-3.905 14.141 0M1.394 9.393c5.857-5.857 15.355-5.857 21.213 0" />
+            </svg>
+        </div>
+        <h1 class="text-3xl font-bold mb-4">You're Offline</h1>
+        <p class="text-gray-300 mb-6">
+            It looks like you've lost internet connection. Some features may not be available until you're back online.
+        </p>
+        <div class="bg-gradient-to-r from-magenta-600 to-magenta-700 p-4 rounded-lg mb-6">
+            <p class="text-sm font-semibold">Cached Content Available</p>
+            <p class="text-xs text-magenta-100 mt-2">You can still access recently viewed pages</p>
+        </div>
+        <button onclick="window.location.reload()" class="w-full bg-magenta-600 hover:bg-magenta-700 text-white font-bold py-3 px-4 rounded-lg transition-colors">
+            Try Again
+        </button>
+    </div>
+</body>
+</html>
