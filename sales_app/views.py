@@ -320,13 +320,17 @@ def delete_product(request, product_id):
 # === PRODUCT SEARCH API ===
 
 def product_autocomplete(request):
-    """Legacy product autocomplete API"""
+    """Product autocomplete/search API"""
     query = request.GET.get('q', '')
-    products = Product.objects.filter(name__icontains=query)[:10]
+    if query:
+        products = Product.objects.filter(name__icontains=query).order_by('name')[:50]
+    else:
+        products = Product.objects.none()
     data = [
         {
             'id': p.id, 
             'name': p.name, 
+            'price': str(p.price),
             'unit_price': str(p.price),
             'stock': p.stock or 0
         }

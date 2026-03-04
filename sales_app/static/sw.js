@@ -1,4 +1,4 @@
-const CACHE_NAME = 'sales-app-v1';
+const CACHE_NAME = 'sales-app-v99';
 const ASSETS_TO_CACHE = [
   '/',
   '/static/css/output.css',
@@ -19,13 +19,14 @@ self.addEventListener('install', (event) => {
   self.skipWaiting();
 });
 
-// Activate event - clean old caches
+// Activate event - clean old caches AGGRESSIVELY
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
           if (cacheName !== CACHE_NAME) {
+            console.log('Deleting old cache:', cacheName);
             return caches.delete(cacheName);
           }
         })
@@ -35,13 +36,20 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch event - network first, then cache
+// Fetch event - NETWORK FIRST strategy to always get fresh content
 self.addEventListener('fetch', (event) => {
   // Skip non-GET requests
   if (event.request.method !== 'GET') {
     return;
   }
 
+  // Never cache API calls
+  if (event.request.url.includes('/api/')) {
+    event.respondWith(fetch(event.request));
+    return;
+  }
+
+  // For static assets, try network first
   event.respondWith(
     fetch(event.request)
       .then((response) => {

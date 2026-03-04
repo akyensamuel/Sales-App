@@ -27,7 +27,7 @@
             <svg class="w-6 h-6 sm:w-8 sm:h-8 text-green-600" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" d="M3 7h18M3 12h18M3 17h18"/></svg>
             Products & Prices
         </h2>
-        <input id="productSearch" type="text" placeholder="Search products..." class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800 dark:text-gray-100 text-sm" />
+        <input id="productSearch" type="text" placeholder="Search products..." value="{{ search_query }}" class="w-full px-3 sm:px-4 py-2 sm:py-3 border border-gray-300 dark:border-gray-600 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 bg-white dark:bg-gray-800 dark:text-gray-100 text-sm" />
     </div>
 
     <!-- Mobile Card View (visible on small screens) -->
@@ -106,8 +106,8 @@
         </div>
     </div>
     
-    <!-- Pagination -->
-    {% if products.has_other_pages %}
+    <!-- Pagination (hidden when searching) -->
+    {% if products.has_other_pages and not search_query %}
     <div class="mb-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div class="text-xs sm:text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
             Showing {{ products.start_index }} to {{ products.end_index }} of {{ products.paginator.count }} products
@@ -151,6 +151,121 @@
         </a>
     </div>
 
-    <script src="{% static 'sales_app/js/products.js' %}"></script>
+    <script>
+    // INLINE AJAX Product Search - no external file, no caching issues
+    (function() {
+        var searchInput = document.getElementById('productSearch');
+        if (!searchInput) return;
+
+        var searchTimeout = null;
+
+        // Debounced input search
+        searchInput.addEventListener('input', function() {
+            if (searchTimeout) clearTimeout(searchTimeout);
+            var term = searchInput.value.trim();
+            searchTimeout = setTimeout(function() {
+                doSearch(term);
+            }, 150);
+        });
+
+        // Enter key = immediate search
+        searchInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') {
+                e.preventDefault();
+                if (searchTimeout) clearTimeout(searchTimeout);
+                doSearch(searchInput.value.trim());
+            }
+        });
+
+        function doSearch(term) {
+            if (term.length === 0) {
+                // Reload the page to show default paginated results
+                window.location.href = window.location.pathname;
+                return;
+            }
+
+            var url = '/sales/api/products/?q=' + encodeURIComponent(term);
+
+            var xhr = new XMLHttpRequest();
+            xhr.open('GET', url, true);
+            xhr.onreadystatechange = function() {
+                if (xhr.readyState === 4 && xhr.status === 200) {
+                    var products = JSON.parse(xhr.responseText);
+                    renderResults(products);
+                }
+            };
+            xhr.send();
+        }
+
+        function esc(str) {
+            var d = document.createElement('div');
+            d.textContent = str;
+            return d.innerHTML;
+        }
+
+        function renderResults(products) {
+            // Update desktop table
+            var tbody = document.getElementById('productsTableBody');
+            if (tbody) {
+                if (products.length === 0) {
+                    tbody.innerHTML = '<tr><td colspan="4" class="px-6 py-4 text-center text-gray-500 dark:text-gray-400 text-sm">No products found.</td></tr>';
+                } else {
+                    var html = '';
+                    for (var i = 0; i < products.length; i++) {
+                        var p = products[i];
+                        var name = p.text || p.name || '';
+                        var price = parseFloat(p.price || p.unit_price || 0).toFixed(2);
+                        var stock = p.stock || 0;
+                        var stockClass = stock < 50 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-green-700 dark:text-green-400';
+                        var lowBadge = stock < 50 ? '<span class="ml-2 text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded">Low!</span>' : '';
+
+                        html += '<tr class="bg-white dark:bg-gray-900 hover:bg-gray-50 dark:hover:bg-gray-800 transition product-row">';
+                        html += '<td class="px-6 py-4 font-medium text-gray-900 dark:text-white product-name text-sm">' + esc(name) + '</td>';
+                        html += '<td class="px-6 py-4 text-green-700 dark:text-green-400 font-semibold text-sm">₵' + price + '</td>';
+                        html += '<td class="px-6 py-4 text-sm"><span class="product-stock font-semibold ' + stockClass + '">' + stock + '</span>' + lowBadge + '</td>';
+                        html += '<td class="px-6 py-4 text-sm"><div class="flex gap-2">';
+                        html += '<a href="/sales/products/edit/' + p.id + '/" class="px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold transition">Edit</a>';
+                        html += '<a href="/sales/products/delete/' + p.id + '/" class="px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold transition">Delete</a>';
+                        html += '</div></td></tr>';
+                    }
+                    tbody.innerHTML = html;
+                }
+            }
+
+            // Update mobile cards
+            var cardBody = document.getElementById('productsCardBody');
+            if (cardBody) {
+                if (products.length === 0) {
+                    cardBody.innerHTML = '<div class="text-center py-8 text-gray-500 dark:text-gray-400">No products found.</div>';
+                } else {
+                    var chtml = '';
+                    for (var j = 0; j < products.length; j++) {
+                        var pr = products[j];
+                        var nm = pr.text || pr.name || '';
+                        var pc = parseFloat(pr.price || pr.unit_price || 0).toFixed(2);
+                        var st = pr.stock || 0;
+                        var stClass = st < 50 ? 'text-red-600 dark:text-red-400 animate-pulse' : 'text-green-700 dark:text-green-400';
+                        var lowTag = st < 50 ? '<span class="ml-2 text-xs bg-red-100 text-red-700 dark:bg-red-900 dark:text-red-200 px-2 py-1 rounded">Low Stock!</span>' : '';
+
+                        chtml += '<div class="product-row bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-lg p-4 hover:shadow-md transition">';
+                        chtml += '<div class="flex justify-between items-start mb-3"><div>';
+                        chtml += '<h3 class="font-semibold text-gray-900 dark:text-white text-sm product-name">' + esc(nm) + '</h3>';
+                        chtml += '<p class="text-xs text-gray-500 dark:text-gray-400 mt-1">SKU: #' + pr.id + '</p>';
+                        chtml += '</div><span class="text-green-700 dark:text-green-400 font-bold text-lg">₵' + pc + '</span></div>';
+                        chtml += '<div class="flex items-center justify-between mb-4 pt-3 border-t border-gray-200 dark:border-gray-700"><div>';
+                        chtml += '<p class="text-xs text-gray-600 dark:text-gray-400 mb-1">Stock Level</p>';
+                        chtml += '<span class="product-stock text-sm font-semibold ' + stClass + '">' + st + ' units</span>' + lowTag;
+                        chtml += '</div></div>';
+                        chtml += '<div class="flex gap-2">';
+                        chtml += '<a href="/sales/products/edit/' + pr.id + '/" class="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg text-xs font-semibold shadow transition text-center">Edit</a>';
+                        chtml += '<a href="/sales/products/delete/' + pr.id + '/" class="flex-1 px-3 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg text-xs font-semibold shadow transition text-center">Delete</a>';
+                        chtml += '</div></div>';
+                    }
+                    cardBody.innerHTML = chtml;
+                }
+            }
+        }
+    })();
+    </script>
 </div>
 {% endblock %}
