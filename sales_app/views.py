@@ -237,7 +237,7 @@ def products_list(request):
     search_query = request.GET.get('search', '').strip()
     if search_query:
         products_query = products_query.filter(
-            Q(name__icontains=search_query) | Q(stock__lt=50)
+            Q(name__icontains=search_query)
         )
     
     # Add filtering for low stock
